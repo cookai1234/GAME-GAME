@@ -1,15 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-  <title>Mes projets</title>
+<meta charset="UTF-8">
+<title>Mon site</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+/* Conteneur */
+.container {
+    text-align: center;
+}
+
+/* Titre */
+h1 {
+    color: #4ade80;
+    text-shadow: 0 0 15px #4ade80;
+}
+
+/* Boutons */
+a {
+    display: block;
+    margin: 15px auto;
+    padding: 15px 30px;
+    width: 220px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: bold;
+    color: white;
+    transition: 0.3s;
+}
+
+/* Couleurs boutons */
+.btn1 { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.btn2 { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
+.btn3 { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+/* Hover */
+a:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+}
+</style>
 </head>
 
 <body>
-  <h1>Bienvenue sur mon site 🎮</h1>
-  <p>Voici mes projets :</p>
 
-  <ul>
-    <li><a href="snake.html">Snake</a></li>
-  </ul>
+<div class="container">
+    <h1>🎮 Mon site</h1>
+    <p>Choisis un jeu :</p>
+
+    <a href="snak.html" class="btn1">🐍 Snak</a>
+    <a href="#" class="btn2">🎯 Prochain jeu</a>
+    <a href="#" class="btn3">🏆 Scores</a>
+</div>
+
 </body>
 </html>
