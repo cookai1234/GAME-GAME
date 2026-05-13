@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEON INVADERS</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #000;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Courier New', monospace;
+    color: #0ff;
+    overflow: hidden;
+    padding: 10px;
+  }
+  h1 {
+    font-size: clamp(20px, 5vw, 36px);
+    letter-spacing: 4px;
+    text-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff;
+    margin-bottom: 10px;
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  @keyframes glow {
+    from { text-shadow: 0 0 10px #0ff, 0 0 20px #0ff; }
+    to { text-shadow: 0 0 20px #f0f, 0 0 30px #f0f, 0 0 40px #f0f; }
+  }
+  #gameContainer {
+    position: relative;
+    border: 2px solid #0ff;
+    box-shadow: 0 0 20px #0ff, inset 0 0 20px rgba(0, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    background: linear-gradient(180deg, #000 0%, #0a0a2e 100%);
+    max-width: 100%;
+    height: auto;
+  }
+  #hud {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 600px;
+    padding: 10px;
+    font-size: clamp(12px, 2.5vw, 18px);
+    text-shadow: 0 0 5px #0ff;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  #soundToggle {
+    background: transparent;
+    border: 1px solid #0ff;
+    color: #0ff;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: inherit;
+  }
+  #overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #0ff;
+    text-align: center;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  #overlay.hidden { display: none; }
+  #overlay h2 {
+    font-size: clamp(22px, 6vw, 42px);
+    margin-bottom: 15px;
+    text-shadow: 0 0 15px #f0f;
+    color: #f0f;
+  }
+  #overlay p {
+    font-size: clamp(13px, 2.8vw, 17px);
+    margin-bottom: 8px;
+    line-height: 1.5;
+  }
+  button {
+    margin-top: 15px;
+    padding: 10px 25px;
+    font-family: 'Courier New', monospace;
+    font-size: clamp(14px, 3vw, 18px);
+    background: transparent;
+    color: #0ff;
+    border: 2px solid #0ff;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.2s;
+    box-shadow: 0 0 10px #0ff;
+  }
+  button:hover, button:active {
+    background: #0ff;
+    color: #000;
+    box-shadow: 0 0 20px #0ff, 0 0 40px #0ff;
+  }
+  .controls {
+    margin-top: 10px;
+    font-size: clamp(10px, 2vw, 13px);
+    color: #888;
+  }
+  #nameInput {
+    background: #000;
+    border: 2px solid #f0f;
+    color: #f0f;
+    padding: 10px 15px;
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    text-align: center;
+    text-transform: uppercase;
+    margin: 10px 0;
+    width: 200px;
+    box-shadow: 0 0 10px #f0f;
+    outline: none;
+  }
+  #scoreTable {
+    margin: 15px auto;
+    border-collapse: collapse;
+    width: 90%;
+    max-width: 350px;
+    font-size: clamp(12px, 2.5vw, 15px);
+  }
+  #scoreTable th, #scoreTable td {
+    padding: 6px 10px;
+    border: 1px solid #0ff;
+    text-align: center;
+  }
+  #scoreTable th {
+    background: rgba(0, 255, 255, 0.2);
+    color: #0ff;
+  }
+  #scoreTable td { color: #fff; }
+  #scoreTable tr.highlight td {
+    color: #ff0;
+    text-shadow: 0 0 5px #ff0;
+    font-weight: bold;
+  }
+  .section-title {
+    color: #ff0;
+    margin: 10px 0;
+    font-size: clamp(14px, 3vw, 18px);
+    letter-spacing: 2px;
+    text-shadow: 0 0 8px #ff0;
+  }
+  #mobileControls {
+    display: none;
+    gap: 10px;
+    margin-top: 15px;
+    width: 100%;
+    max-width: 600px;
+    justify-content: space-between;
+  }
+  .mobile-btn {
+    flex: 1;
+    padding: 20px;
+    font-size: 24px;
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid #0ff;
+    color: #0ff;
+    border-radius: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    margin-top: 0;
+    box-shadow: none;
+    letter-spacing: 0;
+  }
+  .mobile-btn:active { background: rgba(0, 255, 255, 0.4); }
+  @media (max-width: 768px) {
+    #mobileControls { display: flex; }
+  }
+</style>
+</head>
+<body>
+  <h1>◂ NEON INVADERS ▸</h1>
+  <div id="hud">
+    <div>SCORE: <span id="score">0</span></div>
+    <div>NIVEAU: <span id="level">1</span></div>
+    <div>VIES: <span id="lives">3</span></div>
+    <button id="soundToggle">🔊 SON</button>
+  </div>
+  <div id="gameContainer">
+    <canvas id="game" width="600" height="500"></canvas>
+    <div id="overlay">
+      <div id="overlayContent"></div>
+    </div>
+  </div>
+  <div id="mobileControls">
+    <button class="mobile-btn" id="leftBtn">◀</button>
+    <button class="mobile-btn" id="fireBtn">🔥</button>
+    <button class="mobile-btn" id="rightBtn">▶</button>
+  </div>
+
+<script>
+// ========= AUDIO SYSTEM =========
+let audioCtx = null;
+let soundEnabled = true;
+
+function initAudio() {
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) { soundEnabled = false; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(type) {
+  if (!soundEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  switch(type) {
+    case 'shoot':
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(200, now + 0.1);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.1);
+      break;
+    case 'explosion':
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(30, now + 0.3);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.start(now);
+      osc.stop(now + 0.3);
+      // Noise burst
+      const bufferSize = audioCtx.sampleRate * 0.2;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * (1 - i/bufferSize);
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const ngain = audioCtx.createGain();
+      ngain.gain.value = 0.15;
+      noise.connect(ngain);
+      ngain.connect(audioCtx.destination);
+      noise.start(now);
+      break;
+    case 'hit':
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(100, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.start(now);
+      osc.stop(now + 0.4);
+      break;
+    case 'levelup':
+      [523, 659, 784, 1047].forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'square';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.15, now + i * 0.08);
+        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.15);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(now + i * 0.08);
+        o.stop(now + i * 0.08 + 0.15);
+      });
+      break;
+    case 'gameover':
+      [400, 350, 300, 250, 200, 150].forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.15, now + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.2);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(now + i * 0.1);
+        o.stop(now + i * 0.1 + 0.2);
+      });
+      break;
+    case 'highscore':
+      [523, 659, 784, 1047, 1319].forEach((freq, i) => {
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.15, now + i * 0.1);
+        g.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3);
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start(now + i * 0.1);
+        o.stop(now + i * 0.1 + 0.3);
+      });
+      break;
+  }
+}
+
+// ========= HIGH SCORES =========
+let highScores = [];
+const SCORE_KEY = 'neonInvadersScores';
+
+function loadScores() {
+  try {
+    const data = localStorage.getItem(SCORE_KEY);
+    if (data) highScores = JSON.parse(data);
+  } catch(e) { highScores = []; }
+  if (!highScores || highScores.length === 0) {
+    highScores = [
+      { name: 'ACE', score: 500, level: 3 },
+      { name: 'BOT', score: 300, level: 2 },
+      { name: 'CPU', score: 150, level: 1 }
+    ];
+  }
+}
+
+function saveScores() {
+  try { localStorage.setItem(SCORE_KEY, JSON.stringify(highScores)); } catch(e) {}
+}
+
+function isHighScore(score) {
+  if (highScores.length < 10) return true;
+  return score > highScores[highScores.length - 1].score;
+}
+
+function addScore(name, score, level) {
+  highScores.push({ name: name.toUpperCase().slice(0, 8) || 'ANON', score, level });
+  highScores.sort((a, b) => b.score - a.score);
+  highScores = highScores.slice(0, 10);
+  saveScores();
+}
+
+function buildScoreTable(highlightIdx = -1) {
+  let html = '<table id="scoreTable"><tr><th>#</th><th>NOM</th><th>SCORE</th><th>NIV</th></tr>';
+  highScores.forEach((s, i) => {
+    const cls = i === highlightIdx ? ' class="highlight"' : '';
+    html += `<tr${cls}><td>${i+1}</td><td>${s.name}</td><td>${s.score}</td><td>${s.level}</td></tr>`;
+  });
+  html += '</table>';
+  return html;
+}
+
+// ========= GAME =========
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+const scoreEl = document.getElementById('score');
+const levelEl = document.getElementById('level');
+const livesEl = document.getElementById('lives');
+const overlay = document.getElementById('overlay');
+const overlayContent = document.getElementById('overlayContent');
+const soundToggleBtn = document.getElementById('soundToggle');
+
+let state = { running: false, score: 0, level: 1, lives: 3 };
+let keys = {};
+let player, bullets, enemies, enemyBullets, particles, stars;
+let enemyDir = 1, enemyMoveTimer = 0, enemyShootTimer = 0;
+
+function initStars() {
+  stars = [];
+  for (let i = 0; i < 80; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      s: Math.random() * 1.5 + 0.3,
+      speed: Math.random() * 0.5 + 0.1
+    });
+  }
+}
+
+function resetGame() {
+  state.score = 0;
+  state.level = 1;
+  state.lives = 3;
+  updateHUD();
+  initLevel();
+}
+
+function initLevel() {
+  player = { x: W/2 - 20, y: H - 50, w: 40, h: 25, speed: 5, cooldown: 0 };
+  bullets = [];
+  enemyBullets = [];
+  particles = [];
+  enemies = [];
+  const rows = 4, cols = 8;
+  const startX = 60, startY = 60, spacingX = 60, spacingY = 45;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      enemies.push({
+        x: startX + c * spacingX,
+        y: startY + r * spacingY,
+        w: 35, h: 25,
+        type: r,
+        alive: true
+      });
+    }
+  }
+  enemyDir = 1;
+  enemyMoveTimer = 0;
+  enemyShootTimer = 0;
+}
+
+function updateHUD() {
+  scoreEl.textContent = state.score;
+  levelEl.textContent = state.level;
+  livesEl.textContent = state.lives;
+}
+
+function spawnParticles(x, y, color, count = 15) {
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6,
+      vy: (Math.random() - 0.5) * 6,
+      life: 30,
+      color
+    });
+  }
+}
+
+function drawPlayer() {
+  const { x, y, w, h } = player;
+  ctx.fillStyle = '#0ff';
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = '#0ff';
+  ctx.beginPath();
+  ctx.moveTo(x + w/2, y);
+  ctx.lineTo(x + w, y + h);
+  ctx.lineTo(x, y + h);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(x + w/2 - 2, y + 8, 4, 10);
+  ctx.shadowBlur = 0;
+}
+
+function drawEnemy(e) {
+  const colors = ['#f0f', '#ff0', '#0f0', '#f80'];
+  const color = colors[e.type % colors.length];
+  ctx.fillStyle = color;
+  ctx.shadowBlur = 10;
+  ctx.shadowColor = color;
+  const pattern = [
+    [0,0,1,1,1,1,0,0],
+    [0,1,1,1,1,1,1,0],
+    [1,1,0,1,1,0,1,1],
+    [1,1,1,1,1,1,1,1],
+    [0,1,0,1,1,0,1,0]
+  ];
+  for (let r = 0; r < pattern.length; r++) {
+    for (let c = 0; c < pattern[r].length; c++) {
+      if (pattern[r][c]) {
+        ctx.fillRect(e.x + c * (e.w/8), e.y + r * (e.h/5), e.w/8 + 1, e.h/5 + 1);
+      }
+    }
+  }
+  ctx.shadowBlur = 0;
+}
+
+function drawBullet(b, color) {
+  ctx.fillStyle = color;
+  ctx.shadowBlur = 12;
+  ctx.shadowColor = color;
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.shadowBlur = 0;
+}
+
+function update() {
+  stars.forEach(s => {
+    s.y += s.speed;
+    if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
+  });
+
+  if (!state.running) return;
+
+  if (keys['ArrowLeft'] || keys['left']) player.x -= player.speed;
+  if (keys['ArrowRight'] || keys['right']) player.x += player.speed;
+  player.x = Math.max(0, Math.min(W - player.w, player.x));
+  if (player.cooldown > 0) player.cooldown--;
+
+  if ((keys[' '] || keys['fire']) && player.cooldown <= 0) {
+    bullets.push({ x: player.x + player.w/2 - 2, y: player.y, w: 4, h: 12, speed: 8 });
+    player.cooldown = 15;
+    playSound('shoot');
+  }
+
+  bullets = bullets.filter(b => { b.y -= b.speed; return b.y > -20; });
+  enemyBullets = enemyBullets.filter(b => { b.y += b.speed; return b.y < H + 20; });
+
+  const speedFactor = Math.max(10, 40 - state.level * 3 - (32 - enemies.filter(e=>e.alive).length));
+  enemyMoveTimer++;
+  if (enemyMoveTimer >= speedFactor) {
+    enemyMoveTimer = 0;
+    let shouldDrop = false;
+    enemies.forEach(e => {
+      if (!e.alive) return;
+      const nextX = e.x + enemyDir * 10;
+      if (nextX < 0 || nextX + e.w > W) shouldDrop = true;
+    });
+    if (shouldDrop) {
+      enemyDir *= -1;
+      enemies.forEach(e => { if (e.alive) e.y += 20; });
+    } else {
+      enemies.forEach(e => { if (e.alive) e.x += enemyDir * 10; });
+    }
+  }
+
+  enemyShootTimer++;
+  if (enemyShootTimer >= Math.max(30, 80 - state.level * 5)) {
+    enemyShootTimer = 0;
+    const alive = enemies.filter(e => e.alive);
+    if (alive.length > 0) {
+      const shooter = alive[Math.floor(Math.random() * alive.length)];
+      enemyBullets.push({ x: shooter.x + shooter.w/2 - 2, y: shooter.y + shooter.h, w: 4, h: 10, speed: 4 + state.level * 0.3 });
+    }
+  }
+
+  bullets.forEach(b => {
+    enemies.forEach(e => {
+      if (e.alive && b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+        e.alive = false;
+        b.y = -100;
+        state.score += (4 - e.type) * 10 + 10;
+        spawnParticles(e.x + e.w/2, e.y + e.h/2, ['#f0f','#ff0','#0f0','#f80'][e.type]);
+        playSound('explosion');
+        updateHUD();
+      }
+    });
+  });
+
+  enemyBullets.forEach(b => {
+    if (b.x < player.x + player.w && b.x + b.w > player.x && b.y < player.y + player.h && b.y + b.h > player.y) {
+      b.y = H + 100;
+      state.lives--;
+      spawnParticles(player.x + player.w/2, player.y + player.h/2, '#0ff', 25);
+      playSound('hit');
+      updateHUD();
+      if (state.lives <= 0) gameOver();
+    }
+  });
+
+  enemies.forEach(e => {
+    if (e.alive && e.y + e.h >= player.y) gameOver();
+  });
+
+  particles = particles.filter(p => {
+    p.x += p.vx; p.y += p.vy; p.life--;
+    return p.life > 0;
+  });
+
+  if (enemies.every(e => !e.alive)) {
+    state.level++;
+    updateHUD();
+    playSound('levelup');
+    initLevel();
+  }
+}
+
+function render() {
+  ctx.clearRect(0, 0, W, H);
+  stars.forEach(s => {
+    ctx.fillStyle = `rgba(255,255,255,${s.s/2})`;
+    ctx.fillRect(s.x, s.y, s.s, s.s);
+  });
+  if (state.running || overlay.classList.contains('hidden')) {
+    drawPlayer();
+    enemies.forEach(e => { if (e.alive) drawEnemy(e); });
+    bullets.forEach(b => drawBullet(b, '#0ff'));
+    enemyBullets.forEach(b => drawBullet(b, '#f33'));
+    particles.forEach(p => {
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = p.life / 30;
+      ctx.fillRect(p.x, p.y, 3, 3);
+      ctx.globalAlpha = 1;
+    });
+  }
+}
+
+function loop() {
+  update();
+  render();
+  requestAnimationFrame(loop);
+}
+
+// ========= SCREENS =========
+function showStartScreen() {
+  overlayContent.innerHTML = `
+    <h2>PRÊT ?</h2>
+    <p>Détruis les envahisseurs avant qu'ils n'atteignent la Terre !</p>
+    <p class="controls">🖥️ ← → pour bouger | ESPACE pour tirer</p>
+    <p class="controls">📱 Boutons tactiles sur mobile</p>
+    <div class="section-title">◂ MEILLEURS SCORES ▸</div>
+    ${buildScoreTable()}
+    <button id="startBtn">DÉMARRER</button>
+  `;
+  overlay.classList.remove('hidden');
+  document.getElementById('startBtn').addEventListener('click', () => {
+    initAudio();
+    startGame();
+  });
+}
+
+function gameOver() {
+  state.running = false;
+  if (isHighScore(state.score) && state.score > 0) {
+    playSound('highscore');
+    showNameEntry();
+  } else {
+    playSound('gameover');
+    showGameOverScreen();
+  }
+}
+
+function showNameEntry() {
+  overlayContent.innerHTML = `
+    <h2>🏆 NOUVEAU RECORD ! 🏆</h2>
+    <p>Score: <strong style="color:#ff0">${state.score}</strong> | Niveau: ${state.level}</p>
+    <p>Entre ton nom (8 caractères max):</p>
+    <input type="text" id="nameInput" maxlength="8" placeholder="TON NOM" autocomplete="off">
+    <br>
+    <button id="saveBtn">VALIDER</button>
+  `;
+  overlay.classList.remove('hidden');
+  const input = document.getElementById('nameInput');
+  input.focus();
+  const save = () => {
+    const name = input.value.trim() || 'ANON';
+    addScore(name, state.score, state.level);
+    showGameOverScreen(true);
+  };
+  document.getElementById('saveBtn').addEventListener('click', save);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') save();
+    e.stopPropagation();
+  });
+}
+
+function showGameOverScreen(justAdded = false) {
+  let highlightIdx = -1;
+  if (justAdded) {
+    highlightIdx = highScores.findIndex(s => s.score === state.score && s.level === state.level);
+  }
+  overlayContent.innerHTML = `
+    <h2>GAME OVER</h2>
+    <p>Score: <strong>${state.score}</strong> | Niveau: ${state.level}</p>
+    <div class="section-title">◂ MEILLEURS SCORES ▸</div>
+    ${buildScoreTable(highlightIdx)}
+    <button id="restartBtn">REJOUER</button>
+  `;
+  overlay.classList.remove('hidden');
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    initAudio();
+    startGame();
+  });
+}
+
+function startGame() {
+  resetGame();
+  state.running = true;
+  overlay.classList.add('hidden');
+}
+
+// ========= CONTROLS =========
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === ' ') e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+const leftBtn = document.getElementById('leftBtn');
+const rightBtn = document.getElementById('rightBtn');
+const fireBtn = document.getElementById('fireBtn');
+function bindBtn(btn, key) {
+  ['touchstart','mousedown'].forEach(ev => btn.addEventListener(ev, e => { e.preventDefault(); initAudio(); keys[key] = true; }));
+  ['touchend','mouseup','mouseleave','touchcancel'].forEach(ev => btn.addEventListener(ev, e => { e.preventDefault(); keys[key] = false; }));
+}
+bindBtn(leftBtn, 'left');
+bindBtn(rightBtn, 'right');
+bindBtn(fireBtn, 'fire');
+
+soundToggleBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  soundToggleBtn.textContent = soundEnabled ? '🔊 SON' : '🔇 MUET';
+  if (soundEnabled) initAudio();
+});
+
+// ========= INIT =========
+loadScores();
+initStars();
+initLevel();
+showStartScreen();
+loop();
+</script>
+</body>
+</html>
