@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>COOKAI GAME</title>
+<title>🎮 Cookai Games</title>
 
 <style>
 body {
@@ -10,58 +10,91 @@ body {
     font-family: Arial, sans-serif;
     background: linear-gradient(135deg, #0f172a, #1e293b);
     color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
-
-/* Conteneur */
-.container {
     text-align: center;
 }
 
 /* Titre */
 h1 {
+    margin-top: 40px;
     color: #4ade80;
     text-shadow: 0 0 15px #4ade80;
 }
 
-/* Boutons */
-a {
-    display: block;
-    margin: 15px auto;
-    padding: 15px 30px;
-    width: 220px;
-    border-radius: 12px;
-    text-decoration: none;
-    font-weight: bold;
-    color: white;
-    transition: 0.3s;
+/* Grille */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 25px;
+    max-width: 800px;
+    margin: 40px auto;
 }
 
-/* Couleurs boutons */
-.btn1 { background: linear-gradient(90deg, #22c55e, #4ade80); }
-.btn2 { background: linear-gradient(90deg, #06b6d4, #22d3ee); }
-.btn3 { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+/* Carte jeu */
+.card {
+    border: 2px solid #4ade80;
+    border-radius: 15px;
+    padding: 20px;
+    transition: 0.3s;
+    text-decoration: none;
+    color: white;
+}
 
-/* Hover */
-a:hover {
+.card:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 15px rgba(255,255,255,0.3);
+    box-shadow: 0 0 20px #4ade80;
+}
+
+/* Aperçu */
+.preview {
+    width: 100px;
+    height: 100px;
+    margin: auto;
+    border: 2px solid #4ade80;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+/* Nom */
+.name {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Badge */
+.badge {
+    font-size: 12px;
+    opacity: 0.7;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h1>🎮 COOKAI GAME</h1>
-    <p>Choisis un jeu :</p>
+<h1>🗺️ Choisir un jeu</h1>
 
-    <a href="snake.html" class="btn1">🐍 Snake</a>
-    <a href="#" class="btn2">🎯 Prochain jeu</a>
-    <a href="#" class="btn3">🏆 Scores</a>
+<div class="grid">
+
+    <!-- Jeu 1 -->
+    <a href="snake.html" class="card">
+        <div class="preview"></div>
+        <div class="name">🐍 Snake</div>
+        <div class="badge">Disponible</div>
+    </a>
+
+    <!-- Jeu 2 -->
+    <a href="#" class="card">
+        <div class="preview"></div>
+        <div class="name">🎯 Jeu 2</div>
+        <div class="badge">Bientôt</div>
+    </a>
+
+    <!-- Jeu 3 -->
+    <a href="#" class="card">
+        <div class="preview"></div>
+        <div class="name">🚀 Jeu 3</div>
+        <div class="badge">Bientôt</div>
+    </a>
+
 </div>
 
 </body>
