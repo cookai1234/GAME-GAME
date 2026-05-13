@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🐍 Snake Mobile</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none; }
+body {
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    color: white; font-family: Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    min-height: 100vh; touch-action: none; overflow-x: hidden;
+}
+.screen { display:none; flex-direction:column; align-items:center; width:100%; min-height:100vh; }
+.screen.active { display:flex; }
+
+#menuScreen { justify-content:center; gap:14px; padding:20px; }
+#menuScreen h1 { font-size:2.5em; color:#4ade80; text-shadow:0 0 20px #4ade80; animation:pulse 2s infinite; }
+@keyframes pulse { 0%,100%{text-shadow:0 0 20px #4ade80;} 50%{text-shadow:0 0 40px #4ade80,0 0 80px #4ade80;} }
+.snakePreview { font-size:2em; letter-spacing:4px; }
+.menuBtn { width:240px; padding:14px 0; border:none; border-radius:12px; font-size:1.05em; font-weight:bold; cursor:pointer; transition:transform 0.15s; box-shadow:0 5px 15px rgba(0,0,0,0.3); color:white; }
+.menuBtn:active { transform:scale(0.95); }
+#startBtn { background:linear-gradient(135deg,#4ade80,#22c55e); }
+#infiniteBtn { background:linear-gradient(135deg,#06b6d4,#0891b2); }
+#scoresBtn { background:linear-gradient(135deg,#fbbf24,#d97706); }
+#cheatBtn { background:linear-gradient(135deg,#a855f7,#7e22ce); }
+
+#levelSelectScreen { gap:15px; padding:20px; }
+#levelSelectScreen h2 { color:#4ade80; margin-top:20px; font-size:1.6em; }
+.levelGrid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:90%; max-width:400px; }
+.levelCard { background:rgba(255,255,255,0.07); border:2px solid #4ade80; border-radius:12px; padding:8px; cursor:pointer; transition:transform 0.15s,background 0.15s; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.levelCard:active { transform:scale(0.95); background:rgba(74,222,128,0.2); }
+.levelCard .lvlName { font-size:0.75em; font-weight:bold; color:#4ade80; }
+.levelCard .lvlStars { font-size:0.75em; }
+.backBtn { padding:10px 30px; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.3); border-radius:20px; color:white; font-size:0.95em; cursor:pointer; }
+
+#gameScreen { padding:0; justify-content:flex-start; }
+#topBar { width:100%; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:rgba(0,0,0,0.4); flex-wrap:wrap; gap:4px; flex-shrink:0; }
+#topBar .info { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+#topBar .info span { font-size:0.85em; }
+#topBar .btns { display:flex; gap:6px; }
+#topBar button { padding:4px 8px; border:none; border-radius:8px; background:rgba(255,255,255,0.15); color:white; font-size:0.75em; cursor:pointer; }
+#targetWrap { font-size:0.8em; color:#fbbf24; }
+#cheatIndicator { font-size:0.75em; color:#a855f7; }
+#modeIndicator { font-size:0.75em; color:#06b6d4; }
+
+#canvasWrap { position:relative; flex-shrink:0; display:flex; align-items:center; justify-content:center; width:100%; }
+#gameCanvas { display:block; touch-action:none; }
+
+.overlay { display:none; position:absolute; inset:0; background:rgba(0,0,0,0.75); z-index:100; align-items:center; justify-content:center; flex-direction:column; padding:20px; }
+.overlay.active { display:flex; }
+#startOverlay { background:rgba(0,0,0,0.4); pointer-events:none; }
+#startOverlay .overlayBox { pointer-events:auto; }
+.overlayBox { background:linear-gradient(135deg,rgba(30,30,60,0.98),rgba(20,20,40,0.98)); border:2px solid #4ade80; border-radius:20px; padding:24px 20px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:14px; max-width:280px; width:90%; box-shadow:0 0 30px rgba(74,222,128,0.3); }
+.overlayBox h2 { color:#4ade80; font-size:1.4em; }
+.overlayBox p { font-size:0.9em; color:#94a3b8; }
+.oBtn { width:100%; padding:11px 0; border:none; border-radius:10px; font-size:0.95em; font-weight:bold; cursor:pointer; color:white; }
+.oBtn.green { background:linear-gradient(135deg,#4ade80,#22c55e); }
+.oBtn.blue { background:linear-gradient(135deg,#06b6d4,#0891b2); }
+.oBtn.gray { background:rgba(255,255,255,0.15); }
+
+#controls { display:grid; grid-template-columns:60px 60px 60px; grid-template-rows:60px 60px 60px; gap:4px; margin:8px 0 6px 0; flex-shrink:0; }
+.dBtn { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); border-radius:12px; color:white; font-size:1.4em; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.1s; }
+.dBtn:active { background:rgba(74,222,128,0.35); }
+#upBtn    { grid-column:2; grid-row:1; }
+#leftBtn  { grid-column:1; grid-row:2; }
+#rightBtn { grid-column:3; grid-row:2; }
+#downBtn  { grid-column:2; grid-row:3; }
+
+#scoresScreen { padding:20px; gap:12px; }
+#scoresScreen h2 { color:#fbbf24; margin-top:20px; font-size:1.6em; }
+.tabBar { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+.tabBtn { padding:7px 16px; border:1px solid rgba(255,255,255,0.2); border-radius:20px; background:rgba(255,255,255,0.07); color:white; font-size:0.85em; cursor:pointer; }
+.tabBtn.active { background:rgba(74,222,128,0.25); border-color:#4ade80; color:#4ade80; }
+#scoreList { width:90%; max-width:400px; display:flex; flex-direction:column; gap:6px; }
+.scoreItem { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px 14px; border-radius:10px; }
+.scoreItem .rank { font-size:1.1em; min-width:28px; }
+.scoreItem .sname { flex:1; font-weight:bold; }
+.scoreItem .sval { color:#4ade80; font-weight:bold; }
+.noScore { color:#64748b; font-style:italic; text-align:center; padding:20px; }
+
+#cheatScreen { padding:20px; gap:14px; }
+#cheatScreen h2 { color:#a855f7; margin-top:20px; font-size:1.6em; }
+#cheatInput { width:220px; padding:10px 14px; border-radius:10px; border:2px solid #a855f7; background:rgba(168,85,247,0.1); color:white; font-size:1em; text-align:center; }
+#cheatList { display:none; flex-direction:column; gap:10px; width:90%; max-width:300px; }
+.cheatItem { display:flex; align-items:center; gap:12px; background:rgba(168,85,247,0.1); padding:12px; border-radius:10px; border:1px solid rgba(168,85,247,0.3); }
+.cheatItem label { flex:1; font-size:0.9em; }
+.cheatItem input[type=checkbox] { width:20px; height:20px; cursor:pointer; accent-color:#a855f7; }
+
+#nameOverlay .overlayBox input { width:100%; padding:10px; border-radius:8px; border:1px solid #4ade80; background:rgba(0,0,0,0.4); color:white; font-size:1em; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="screen active" id="menuScreen">
+  <h1>🐍 Snake</h1>
+  <div class="snakePreview">🟩🟩🟩🍎</div>
+  <button class="menuBtn" id="startBtn">🎮 Niveaux</button>
+  <button class="menuBtn" id="infiniteBtn">♾️ Mode Infini</button>
+  <button class="menuBtn" id="scoresBtn">🏆 Meilleurs Scores</button>
+  <button class="menuBtn" id="cheatBtn">🎭 Codes Triche</button>
+</div>
+
+<div class="screen" id="levelSelectScreen">
+  <h2>🗺️ Choisir un Niveau</h2>
+  <div class="levelGrid" id="levelGrid"></div>
+  <button class="backBtn" id="levelBackBtn">← Retour</button>
+</div>
+
+<div class="screen" id="gameScreen">
+  <div id="topBar">
+    <div class="info">
+      <span>🍎 <span id="score">0</span></span>
+      <span>❤️ <span id="lives">3</span></span>
+      <span id="targetWrap">🎯 <span id="targetCount">0</span>/<span id="targetMax">0</span></span>
+      <span id="modeIndicator"></span>
+      <span id="cheatIndicator"></span>
+    </div>
+    <div class="btns">
+      <button id="muteBtn">🔊</button>
+      <button id="pauseBtn">⏸</button>
+      <button id="menuFromGameBtn">🏠</button>
+    </div>
+  </div>
+
+  <div id="canvasWrap">
+    <canvas id="gameCanvas"></canvas>
+    <div class="overlay" id="startOverlay">
+      <div class="overlayBox" id="startMsg">
+        <h2>🐍 Prêt ?</h2>
+        <p>Appuie sur une direction<br>pour commencer !</p>
+      </div>
+    </div>
+    <div class="overlay" id="pauseOverlay">
+      <div class="overlayBox">
+        <h2>⏸ Pause</h2>
+        <button class="oBtn green" id="resumeBtn">▶️ Reprendre</button>
+        <button class="oBtn gray" id="menuFromPauseBtn">🏠 Menu</button>
+      </div>
+    </div>
+    <div class="overlay" id="gameOverOverlay">
+      <div class="overlayBox">
+        <h2>💀 Game Over</h2>
+        <p>Score : <strong id="goScore">0</strong></p>
+        <button class="oBtn green" id="retryBtn">🔄 Rejouer</button>
+        <button class="oBtn gray" id="gameOverMenuBtn">🏠 Menu</button>
+      </div>
+    </div>
+    <div class="overlay" id="levelWinOverlay">
+      <div class="overlayBox">
+        <h2>🎉 Niveau réussi !</h2>
+        <p>Score : <strong id="lwScore">0</strong></p>
+        <button class="oBtn green" id="nextLevelBtn">▶️ Niveau suivant</button>
+        <button class="oBtn gray" id="restartBtn">🔄 Recommencer</button>
+      </div>
+    </div>
+    <div class="overlay" id="victoryOverlay">
+      <div class="overlayBox">
+        <h2>🏆 Victoire Totale !</h2>
+        <p>Tous les niveaux terminés !<br>Score : <strong id="vScore">0</strong></p>
+        <button class="oBtn green" id="victoryBtn">🏠 Menu</button>
+      </div>
+    </div>
+    <div class="overlay" id="nameOverlay">
+      <div class="overlayBox">
+        <h2>🏆 Nouveau Record !</h2>
+        <p>Entre ton prénom :</p>
+        <input type="text" id="playerNameInput" maxlength="12" placeholder="Ton prénom...">
+        <button class="oBtn green" id="saveNameBtn">✅ Valider</button>
+        <button class="oBtn gray" id="skipNameBtn">⏭ Passer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button class="dBtn" id="upBtn">▲</button>
+    <button class="dBtn" id="leftBtn">◄</button>
+    <button class="dBtn" id="rightBtn">►</button>
+    <button class="dBtn" id="downBtn">▼</button>
+  </div>
+</div>
+
+<div class="screen" id="scoresScreen">
+  <h2>🏆 Meilleurs Scores</h2>
+  <div class="tabBar">
+    <button class="tabBtn active" id="tabInfinite">♾️ Infini</button>
+    <button class="tabBtn" id="tabLevels">🎮 Niveaux</button>
+  </div>
+  <div class="tabBar">
+    <button class="tabBtn active" id="tabNormal">⭐ Normal</button>
+    <button class="tabBtn" id="tabCheater">🎭 Tricheur</button>
+  </div>
+  <div id="scoreList"></div>
+  <button class="backBtn" id="scoresBackBtn">← Retour</button>
+</div>
+
+<div class="screen" id="cheatScreen">
+  <h2>🎭 Codes Triche</h2>
+  <p style="color:#94a3b8;font-size:0.85em;">Tape le mot de passe :</p>
+  <input type="text" id="cheatInput" placeholder="Mot de passe..." autocomplete="off">
+  <div id="cheatList">
+    <div class="cheatItem"><span>👻</span><label>Invincible</label><input type="checkbox" id="chInvincible"></div>
+    <div class="cheatItem"><span>🐌</span><label>Super lent</label><input type="checkbox" id="chSlow"></div>
+    <div class="cheatItem"><span>⚡</span><label>Super rapide</label><input type="checkbox" id="chFast"></div>
+    <div class="cheatItem"><span>✖️</span><label>Points x2</label><input type="checkbox" id="chDouble"></div>
+  </div>
+  <button class="backBtn" id="cheatBackBtn">← Retour</button>
+</div>
+
+<script>
+// ===================================================
+// CONFIG
+// ===================================================
+const GRID = 20;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+let CELL = 16;
+let snake=[], dir={x:1,y:0}, nextDir={x:1,y:0};
+let food={x:5,y:5}, walls=[];
+let score=0, lives=3;
+let gameRunning=false, paused=false, started=false;
+let loopId=null, isInfinite=false, currentLevel=0;
+let chInvincible=false, chSlow=false, chFast=false, chDouble=false;
+let pendingScore=0, pendingCheated=false;
+let muted=false;
+
+// ===================================================
+// LEVELS - Niveaux 9 et 10 complètement refaits
+// ===================================================
+const LEVELS = [
+    {
+        name:'Débutant', stars:'⭐', speed:220, lives:3, target:5,
+        color:'#4ade80', borderColor:'#22c55e',
+        walls:[]
+    },
+    {
+        name:'Facile', stars:'⭐⭐', speed:190, lives:3, target:8,
+        color:'#86efac', borderColor:'#4ade80',
+        walls:[
+            {x:5,y:5},{x:6,y:5},{x:7,y:5},
+            {x:12,y:14},{x:13,y:14},{x:14,y:14}
+        ]
+    },
+    {
+        name:'Normal', stars:'⭐⭐', speed:170, lives:3, target:10,
+        color:'#facc15', borderColor:'#eab308',
+        walls:[
+            {x:5,y:2},{x:5,y:3},{x:5,y:4},
+            {x:14,y:15},{x:14,y:16},{x:14,y:17},
+            {x:2,y:10},{x:3,y:10},{x:4,y:10}
+        ]
+    },
+    {
+        name:'Moyen', stars:'⭐⭐⭐', speed:155, lives:2, target:12,
+        color:'#fb923c', borderColor:'#f97316',
+        walls:[
+            {x:8,y:4},{x:9,y:4},{x:10,y:4},{x:11,y:4},
+            {x:8,y:15},{x:9,y:15},{x:10,y:15},{x:11,y:15},
+            {x:4,y:8},{x:4,y:9},{x:4,y:10},{x:4,y:11},
+            {x:15,y:8},{x:15,y:9},{x:15,y:10},{x:15,y:11}
+        ]
+    },
+    {
+        name:'Difficile', stars:'⭐⭐⭐', speed:140, lives:2, target:15,
+        color:'#f87171', borderColor:'#ef4444',
+        walls:[
+            {x:3,y:3},{x:4,y:3},{x:3,y:4},
+            {x:16,y:3},{x:15,y:3},{x:16,y:4},
+            {x:3,y:16},{x:4,y:16},{x:3,y:15},
+            {x:16,y:16},{x:15,y:16},{x:16,y:15},
+            {x:9,y:9},{x:10,y:9},{x:9,y:10},{x:10,y:10}
+        ]
+    },
+    {
+        name:'Dur', stars:'⭐⭐⭐⭐', speed:125, lives:2, target:18,
+        color:'#c084fc', borderColor:'#a855f7',
+        walls:[
+            {x:6,y:6},{x:7,y:6},{x:8,y:6},
+            {x:11,y:6},{x:12,y:6},{x:13,y:6},
+            {x:6,y:13},{x:7,y:13},{x:8,y:13},
+            {x:11,y:13},{x:12,y:13},{x:13,y:13},
+            {x:6,y:7},{x:6,y:8},
+            {x:13,y:7},{x:13,y:8},
+            {x:6,y:11},{x:6,y:12},
+            {x:13,y:11},{x:13,y:12}
+        ]
+    },
+    {
+        name:'Expert', stars:'⭐⭐⭐⭐', speed:110, lives:1, target:20,
+        color:'#67e8f9', borderColor:'#06b6d4',
+        walls:[
+            {x:2,y:5},{x:3,y:5},{x:4,y:5},{x:5,y:5},{x:6,y:5},
+            {x:8,y:5},{x:9,y:5},{x:10,y:5},{x:11,y:5},{x:12,y:5},
+            {x:2,y:10},{x:3,y:10},{x:4,y:10},{x:5,y:10},{x:6,y:10},
+            {x:8,y:10},{x:9,y:10},{x:10,y:10},{x:11,y:10},{x:12,y:10},
+            {x:2,y:14},{x:3,y:14},{x:4,y:14},{x:5,y:14},{x:6,y:14},
+            {x:8,y:14},{x:9,y:14},{x:10,y:14},{x:11,y:14},{x:12,y:14}
+        ]
+    },
+    {
+        name:'Maître', stars:'⭐⭐⭐⭐⭐', speed:95, lives:1, target:22,
+        color:'#f472b6', borderColor:'#ec4899',
+        walls:[
+            {x:5,y:5},{x:5,y:6},{x:6,y:5},
+            {x:14,y:5},{x:14,y:6},{x:13,y:5},
+            {x:5,y:14},{x:5,y:13},{x:6,y:14},
+            {x:14,y:14},{x:14,y:13},{x:13,y:14},
+            {x:9,y:3},{x:10,y:3},
+            {x:9,y:16},{x:10,y:16},
+            {x:3,y:9},{x:3,y:10},
+            {x:16,y:9},{x:16,y:10},
+            {x:9,y:8},{x:10,y:8},
+            {x:9,y:11},{x:10,y:11},
+            {x:8,y:9},{x:8,y:10},
+            {x:11,y:9},{x:11,y:10}
+        ]
+    },
+    // NIVEAU 9 - Couloirs en croix - LARGEMENT OUVERT
+    {
+        name:'Légendaire', stars:'⭐⭐⭐⭐⭐', speed:80, lives:1, target:25,
+        color:'#fbbf24', borderColor:'#f59e0b',
+        walls:(function(){
+            const w=[];
+            // 4 murs courts dans chaque quadrant, jamais fermés
+            // Quadrant haut-gauche
+            for(let x=4;x<=7;x++) w.push({x,y:4});
+            for(let y=5;y<=7;y++) w.push({x:4,y});
+            // Quadrant haut-droite
+            for(let x=12;x<=15;x++) w.push({x,y:4});
+            for(let y=5;y<=7;y++) w.push({x:15,y});
+            // Quadrant bas-gauche
+            for(let x=4;x<=7;x++) w.push({x,y:15});
+            for(let y=12;y<=14;y++) w.push({x:4,y});
+            // Quadrant bas-droite
+            for(let x=12;x<=15;x++) w.push({x,y:15});
+            for(let y=12;y<=14;y++) w.push({x:15,y});
+            // Croix centrale - petite, ouverte aux 4 coins
+            for(let x=8;x<=11;x++) w.push({x,y:9});
+            for(let x=8;x<=11;x++) w.push({x,y:10});
+            return w;
+        })()
+    },
+    // NIVEAU 10 - Obstacles épars, jamais de zone fermée
+    {
+        name:'EXTRÊME', stars:'💀💀💀', speed:65, lives:1, target:30,
+        color:'#ff4444', borderColor:'#ff0000',
+        walls:(function(){
+            const w=[];
+            // Murs en L dispersés - aucun n'enferme une zone
+            // Haut-gauche
+            w.push({x:3,y:2},{x:4,y:2},{x:5,y:2},{x:3,y:3});
+            // Haut-droite
+            w.push({x:14,y:2},{x:15,y:2},{x:16,y:2},{x:16,y:3});
+            // Milieu gauche
+            w.push({x:2,y:7},{x:2,y:8},{x:2,y:9},{x:3,y:9});
+            // Milieu droite
+            w.push({x:17,y:7},{x:17,y:8},{x:17,y:9},{x:16,y:9});
+            // Centre haut
+            w.push({x:8,y:4},{x:9,y:4},{x:10,y:4},{x:11,y:4});
+            // Centre bas
+            w.push({x:8,y:15},{x:9,y:15},{x:10,y:15},{x:11,y:15});
+            // Bas-gauche
+            w.push({x:3,y:16},{x:4,y:16},{x:5,y:16},{x:3,y:15});
+            // Bas-droite
+            w.push({x:14,y:16},{x:15,y:16},{x:16,y:16},{x:16,y:15});
+            // Obstacles milieu - petits blocs isolés
+            w.push({x:6,y:7},{x:7,y:7});
+            w.push({x:12,y:7},{x:13,y:7});
+            w.push({x:6,y:12},{x:7,y:12});
+            w.push({x:12,y:12},{x:13,y:12});
+            // Centre - juste 4 cases isolées
+            w.push({x:9,y:9},{x:10,y:9},{x:9,y:10},{x:10,y:10});
+            return w;
+        })()
+    }
+];
+
+// ===================================================
+// SCREENS & OVERLAYS
+// ===================================================
+const screens = {
+    menu: document.getElementById('menuScreen'),
+    levelSelect: document.getElementById('levelSelectScreen'),
+    game: document.getElementById('gameScreen'),
+    scores: document.getElementById('scoresScreen'),
+    cheat: document.getElementById('cheatScreen')
+};
+const overlays = {
+    start: document.getElementById('startOverlay'),
+    pause: document.getElementById('pauseOverlay'),
+    gameOver: document.getElementById('gameOverOverlay'),
+    levelWin: document.getElementById('levelWinOverlay'),
+    victory: document.getElementById('victoryOverlay'),
+    name: document.getElementById('nameOverlay')
+};
+
+function showScreen(s){
+    Object.values(screens).forEach(sc=>sc.classList.remove('active'));
+    s.classList.add('active');
+}
+function showOverlay(o){ o.classList.add('active'); }
+function hideOverlay(o){ o.classList.remove('active'); }
+function hideAllOverlays(){ Object.values(overlays).forEach(o=>o.classList.remove('active')); }
+
+// ===================================================
+// CANVAS SIZE
+// ===================================================
+function computeCanvasSize(){
+    const topH = document.getElementById('topBar').offsetHeight || 44;
+    const ctrlH = document.getElementById('controls').offsetHeight || 196;
+    const margin = 8;
+    const availW = window.innerWidth;
+    const availH = window.innerHeight - topH - ctrlH - margin;
+    const size = Math.floor(Math.min(availW, availH) / GRID) * GRID;
+    canvas.width = size;
+    canvas.height = size;
+    document.getElementById('canvasWrap').style.height = size + 'px';
+    CELL = size / GRID;
+    return CELL;
+}
+
+window.addEventListener('resize', ()=>{ computeCanvasSize(); if(gameRunning) drawGame(); });
+
+// ===================================================
+// AUDIO
+// ===================================================
+let audioCtx=null, bgNodes=[];
+
+function initAudio(){
+    if(audioCtx) return;
+    audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+}
+function beep(freq,dur,type='square',vol=0.15){
+    if(!audioCtx||muted) return;
+    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type=type; o.frequency.value=freq;
+    g.gain.setValueAtTime(vol,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+}
+function playEat(){ beep(880,0.08,'sine',0.2); }
+function playDie(){ beep(150,0.4,'sawtooth',0.3); setTimeout(()=>beep(100,0.6,'sawtooth',0.2),100); }
+function playWin(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,0.15,'sine',0.25),i*120)); }
+function playClick(){ beep(440,0.05,'sine',0.1); }
+
+function startBgMusic(){
+    if(!audioCtx||muted) return;
+    stopBgMusic();
+    const spd = isInfinite ? 1 : 1+currentLevel*0.12;
+    const notes=[262,294,330,349,392,440,494,523];
+    let i=0;
+    function n(){
+        if(muted) return;
+        const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type='square'; o.frequency.value=notes[i%notes.length];
+        g.gain.setValueAtTime(0.04,audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.18);
+        o.start(); o.stop(audioCtx.currentTime+0.18);
+        i++;
+        bgNodes.push(setTimeout(n, Math.max(120,300/spd)));
+    }
+    n();
+}
+function stopBgMusic(){ bgNodes.forEach(t=>clearTimeout(t)); bgNodes=[]; }
+
+// ===================================================
+// WALLS
+// ===================================================
+function buildWalls(defs){ walls=defs.map(w=>({x:w.x,y:w.y})); }
+function isWall(x,y){ return walls.some(w=>w.x===x&&w.y===y); }
+
+// ===================================================
+// FOOD - CORRECTION TRANSPARENCE
+// ===================================================
+function spawnFood(){
+    let tries=0;
+    while(tries<500){
+        const x=Math.floor(Math.random()*GRID);
+        const y=Math.floor(Math.random()*GRID);
+        if(!isWall(x,y) && !snake.some(s=>s.x===x&&s.y===y)){
+            food={x,y};
+            return;
+        }
+        tries++;
+    }
+}
+
+// ===================================================
+// SNAKE START
+// ===================================================
+function findSafeStart(){
+    const candidates=[
+        {x:10,y:10},{x:10,y:3},{x:3,y:10},{x:16,y:10},{x:10,y:16},
+        {x:3,y:3},{x:16,y:3},{x:3,y:16},{x:16,y:16},
+        {x:10,y:7},{x:7,y:10},{x:13,y:10},{x:10,y:13},
+        {x:5,y:5},{x:14,y:5},{x:5,y:14},{x:14,y:14}
+    ];
+    for(const c of candidates){
+        if(!isWall(c.x,c.y)&&!isWall(c.x-1,c.y)&&!isWall(c.x-2,c.y)&&
+           c.x>=3&&c.x<GRID-1&&c.y>=1&&c.y<GRID-1) return c;
+    }
+    for(let y=1;y<GRID-1;y++){
+        for(let x=3;x<GRID-1;x++){
+            if(!isWall(x,y)&&!isWall(x-1,y)&&!isWall(x-2,y)) return {x,y};
+        }
+    }
+    return {x:10,y:10};
+}
+
+function resetSnake(){
+    const h=findSafeStart();
+    snake=[{x:h.x,y:h.y},{x:h.x-1,y:h.y},{x:h.x-2,y:h.y}];
+    dir={x:1,y:0}; nextDir={x:1,y:0};
+}
+
+// ===================================================
+// START LEVEL / INFINITE
+// ===================================================
+function startLevel(idx){
+    clearInterval(loopId); stopBgMusic(); hideAllOverlays();
+    isInfinite=false; currentLevel=idx;
+    const lv=LEVELS[idx];
+    score=0; lives=lv.lives;
+    document.getElementById('score').textContent=0;
+    document.getElementById('lives').textContent=lives;
+    document.getElementById('modeIndicator').textContent=`📍 Niv.${idx+1} ${lv.name}`;
+    document.getElementById('targetWrap').style.display='';
+    document.getElementById('targetMax').textContent=lv.target;
+    document.getElementById('targetCount').textContent=0;
+    buildWalls(lv.walls);
+    resetSnake(); spawnFood();
+    started=false; paused=false; gameRunning=true;
+    showScreen(screens.game);
+    setTimeout(()=>{ computeCanvasSize(); drawGame(); showOverlay(overlays.start); updateCheatIndicator(); },60);
+}
+
+function startInfinite(){
+    clearInterval(loopId); stopBgMusic(); hideAllOverlays();
+    isInfinite=true; currentLevel=0; lives=1; score=0;
+    document.getElementById('score').textContent=0;
+    document.getElementById('lives').textContent=1;
+    document.getElementById('modeIndicator').textContent='♾️ Infini';
+    document.getElementById('targetWrap').style.display='none';
+    buildWalls([]); resetSnake(); spawnFood();
+    started=false; paused=false; gameRunning=true;
+    showScreen(screens.game);
+    setTimeout(()=>{ computeCanvasSize(); drawGame(); showOverlay(overlays.start); updateCheatIndicator(); },60);
+}
+
+// ===================================================
+// SPEED / LOOP
+// ===================================================
+function getSpeed(){
+    let spd = isInfinite ? Math.max(80,200-Math.floor(score/5)*10) : LEVELS[currentLevel].speed;
+    if(chSlow) spd=Math.min(400,spd*2);
+    if(chFast) spd=Math.max(60,Math.floor(spd/2));
+    return spd;
+}
+function scheduleLoop(){ clearInterval(loopId); loopId=setInterval(tick,getSpeed()); }
+function beginGame(){ started=true; hideOverlay(overlays.start); startBgMusic(); scheduleLoop(); }
+
+function tick(){
+    if(!gameRunning||paused||!started) return;
+    dir={x:nextDir.x,y:nextDir.y};
+    let nx=snake[0].x+dir.x, ny=snake[0].y+dir.y;
+    if(isInfinite||chInvincible){ nx=(nx+GRID)%GRID; ny=(ny+GRID)%GRID; }
+    if(!chInvincible&&(nx<0||nx>=GRID||ny<0||ny>=GRID||isWall(nx,ny)||snake.some(s=>s.x===nx&&s.y===ny))){ handleDeath(); return; }
+    snake.unshift({x:nx,y:ny});
+    if(nx===food.x&&ny===food.y){
+        score+=(chDouble?2:1);
+        document.getElementById('score').textContent=score;
+        document.getElementById('targetCount').textContent=score;
+        playEat(); spawnFood();
+        if(!isInfinite&&score>=LEVELS[currentLevel].target){
+            clearInterval(loopId); stopBgMusic(); gameRunning=false; playWin();
+            if(currentLevel>=LEVELS.length-1){
+                document.getElementById('vScore').textContent=score;
+                setTimeout(()=>checkAndSaveScore(score,anyCheats(),'levels',()=>showOverlay(overlays.victory)),500);
+            } else {
+                document.getElementById('lwScore').textContent=score;
+                setTimeout(()=>checkAndSaveScore(score,anyCheats(),'levels',()=>showOverlay(overlays.levelWin)),500);
+            }
+            return;
+        }
+        if(isInfinite) scheduleLoop();
+    } else { snake.pop(); }
+    drawGame();
+}
+
+function handleDeath(){
+    playDie(); lives--;
+    document.getElementById('lives').textContent=lives;
+    if(lives<=0){
+        clearInterval(loopId); stopBgMusic(); gameRunning=false;
+        document.getElementById('goScore').textContent=score;
+        setTimeout(()=>checkAndSaveScore(score,anyCheats(),isInfinite?'infinite':'levels',()=>showOverlay(overlays.gameOver)),600);
+    } else {
+        resetSnake(); spawnFood(); drawGame();
+        started=false; paused=false; stopBgMusic();
+        showOverlay(overlays.start);
+    }
+}
+
+// ===================================================
+// DRAW - POMMES CORRIGÉES (plus de transparence)
+// ===================================================
+function drawGame(){
+    const cs=canvas.width/GRID;
+    ctx.fillStyle='#0f172a';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    const lv=isInfinite?{color:'#4ade80',borderColor:'#22c55e'}:LEVELS[currentLevel];
+
+    // Grille légère
+    ctx.strokeStyle='rgba(255,255,255,0.03)';
+    ctx.lineWidth=0.5;
+    for(let i=0;i<=GRID;i++){
+        ctx.beginPath(); ctx.moveTo(i*cs,0); ctx.lineTo(i*cs,canvas.height); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,i*cs); ctx.lineTo(canvas.width,i*cs); ctx.stroke();
+    }
+
+    // Bordure
+    ctx.strokeStyle=lv.borderColor;
+    ctx.lineWidth=3;
+    ctx.strokeRect(1,1,canvas.width-2,canvas.height-2);
+
+    // Murs
+    walls.forEach(w=>{
+        ctx.fillStyle=lv.borderColor;
+        ctx.fillRect(w.x*cs+1,w.y*cs+1,cs-2,cs-2);
+        ctx.fillStyle='rgba(255,255,255,0.2)';
+        ctx.fillRect(w.x*cs+1,w.y*cs+1,cs-2,3);
+    });
+
+    // POMME - dessinée en canvas pur, SANS emoji pour éviter transparence
+    const fx=food.x*cs, fy=food.y*cs;
+    const cr=cs*0.38;
+    const cx=fx+cs/2, cy=fy+cs/2;
+    // Corps rouge vif
+    ctx.beginPath();
+    ctx.arc(cx, cy+cs*0.05, cr, 0, Math.PI*2);
+    const grad=ctx.createRadialGradient(cx-cr*0.3, cy-cr*0.2+cs*0.05, cr*0.1, cx, cy+cs*0.05, cr);
+    grad.addColorStop(0,'#ff6b6b');
+    grad.addColorStop(0.5,'#ff2222');
+    grad.addColorStop(1,'#cc0000');
+    ctx.fillStyle=grad;
+    ctx.fill();
+    // Reflet
+    ctx.beginPath();
+    ctx.ellipse(cx-cr*0.25, cy-cr*0.15+cs*0.05, cr*0.3, cr*0.2, -0.5, 0, Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.4)';
+    ctx.fill();
+    // Tige
+    ctx.beginPath();
+    ctx.moveTo(cx, fy+cs*0.12);
+    ctx.quadraticCurveTo(cx+cs*0.12, fy+cs*0.05, cx+cs*0.08, fy+cs*0.02);
+    ctx.strokeStyle='#2d5a1b';
+    ctx.lineWidth=Math.max(1.5, cs*0.06);
+    ctx.stroke();
+    // Feuille
+    ctx.beginPath();
+    ctx.ellipse(cx+cs*0.12, fy+cs*0.1, cs*0.1, cs*0.06, -0.6, 0, Math.PI*2);
+    ctx.fillStyle='#4ade80';
+    ctx.fill();
+
+    // Serpent
+    snake.forEach((seg,i)=>{
+        const ratio=i/snake.length;
+        if(i===0){
+            ctx.fillStyle=lv.color;
+        } else {
+            const h=140-ratio*40;
+            const l=50-ratio*15;
+            ctx.fillStyle=`hsl(${h},70%,${l}%)`;
+        }
+        const pad=i===0?1:2;
+        ctx.beginPath();
+        if(ctx.roundRect){
+            ctx.roundRect(seg.x*cs+pad,seg.y*cs+pad,cs-pad*2,cs-pad*2,4);
+        } else {
+            ctx.rect(seg.x*cs+pad,seg.y*cs+pad,cs-pad*2,cs-pad*2);
+        }
+        ctx.fill();
+
+        // Yeux sur la tête
+        if(i===0){
+            ctx.fillStyle='#0f172a';
+            const ex = dir.x===1 ? seg.x*cs+cs*0.65 : dir.x===-1 ? seg.x*cs+cs*0.2 : seg.x*cs+cs*0.3;
+            const ex2= dir.x===1 ? seg.x*cs+cs*0.65 : dir.x===-1 ? seg.x*cs+cs*0.2 : seg.x*cs+cs*0.65;
+            const ey1= dir.y===1 ? seg.y*cs+cs*0.6 : dir.y===-1 ? seg.y*cs+cs*0.25 : seg.y*cs+cs*0.3;
+            const ey2= dir.y===1 ? seg.y*cs+cs*0.6 : dir.y===-1 ? seg.y*cs+cs*0.25 : seg.y*cs+cs*0.62;
+            const er=Math.max(1.5, cs*0.08);
+            ctx.beginPath(); ctx.arc(ex, ey1, er, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(ex2, ey2, er, 0, Math.PI*2); ctx.fill();
+        }
+    });
+}
+
+// ===================================================
+// CHEATS
+// ===================================================
+function anyCheats(){ return chInvincible||chSlow||chFast||chDouble; }
+function updateCheatIndicator(){
+    const a=[];
+    if(chInvincible)a.push('👻');
+    if(chSlow)a.push('🐌');
+    if(chFast)a.push('⚡');
+    if(chDouble)a.push('✖️2');
+    document.getElementById('cheatIndicator').textContent=a.join(' ');
+}
+
+// ===================================================
+// SCORES
+// ===================================================
+let scoreMode='infinite', scoreTab='normal';
+function getScoreKey(m,t){ return `snake_scores_${m}_${t}`; }
+function loadScores(m,t){ try{ return JSON.parse(localStorage.getItem(getScoreKey(m,t)))||[]; }catch(e){ return []; } }
+function saveScores(m,t,arr){ localStorage.setItem(getScoreKey(m,t),JSON.stringify(arr)); }
+function isNewRecord(sc,m,t){ const a=loadScores(m,t); return a.length<10||sc>Math.min(...a.map(s=>s.score)); }
+function addScore(name,sc,m,t){
+    let a=loadScores(m,t);
+    a.push({name,score:sc,date:new Date().toLocaleDateString('fr-FR')});
+    a.sort((x,y)=>y.score-x.score); a=a.slice(0,10);
+    saveScores(m,t,a);
+}
+function checkAndSaveScore(sc,cheated,mode,cb){
+    const tab=cheated?'cheater':'normal';
+    if(sc>0&&isNewRecord(sc,mode,tab)){
+        pendingScore=sc; pendingCheated=cheated;
+        overlays.name._cb=cb; overlays.name._mode=mode; overlays.name._tab=tab;
+        document.getElementById('playerNameInput').value=localStorage.getItem('snake_pseudo')||'';
+        showOverlay(overlays.name);
+    } else cb();
+}
+function renderScores(){
+    const arr=loadScores(scoreMode,scoreTab);
+    const list=document.getElementById('scoreList');
+    if(!arr.length){ list.innerHTML='<div class="noScore">Aucun score 🎮</div>'; return; }
+    list.innerHTML=arr.map((s,i)=>`<div class="scoreItem"><span class="rank">${['🥇','🥈','🥉'][i]||`${i+1}.`}</span><span class="sname">${s.name||'Anonyme'}</span><span class="sval">${s.score} pts</span><span style="color:#64748b;font-size:0.75em">${s.date||''}</span></div>`).join('');
+}
+
+// ===================================================
+// LEVEL CARDS
+// ===================================================
+function buildLevelCards(){
+    const grid=document.getElementById('levelGrid');
+    grid.innerHTML='';
+    LEVELS.forEach((lv,i)=>{
+        const card=document.createElement('div');
+        card.className='levelCard';
+        const cv=document.createElement('canvas');
+        cv.width=80; cv.height=80;
+        const cx2=cv.getContext('2d');
+        cx2.fillStyle='#0f172a'; cx2.fillRect(0,0,80,80);
+        cx2.fillStyle=lv.borderColor;
+        const sc2=80/GRID;
+        lv.walls.forEach(w=>cx2.fillRect(w.x*sc2,w.y*sc2,sc2-0.5,sc2-0.5));
+        cx2.strokeStyle=lv.borderColor; cx2.lineWidth=2; cx2.strokeRect(1,1,78,78);
+        card.appendChild(cv);
+        const nm=document.createElement('div'); nm.className='lvlName'; nm.textContent=`${i+1}. ${lv.name}`;
+        const st=document.createElement('div'); st.className='lvlStars'; st.textContent=lv.stars;
+        card.appendChild(nm); card.appendChild(st);
+        card.addEventListener('click',()=>{ playClick(); startLevel(i); });
+        grid.appendChild(card);
+    });
+}
+
+// ===================================================
+// CONTROLS
+// ===================================================
+function setDir(dx,dy){
+    if(!gameRunning) return;
+    initAudio();
+    if(!started) beginGame();
+    if(dx===1&&dir.x===-1) return;
+    if(dx===-1&&dir.x===1) return;
+    if(dy===1&&dir.y===-1) return;
+    if(dy===-1&&dir.y===1) return;
+    nextDir={x:dx,y:dy};
+}
+
+document.getElementById('upBtn').addEventListener('click',()=>setDir(0,-1));
+document.getElementById('downBtn').addEventListener('click',()=>setDir(0,1));
+document.getElementById('leftBtn').addEventListener('click',()=>setDir(-1,0));
+document.getElementById('rightBtn').addEventListener('click',()=>setDir(1,0));
+
+document.addEventListener('keydown',e=>{
+    if(!screens.game.classList.contains('active')) return;
+    initAudio();
+    const map={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],w:[0,-1],s:[0,1],a:[-1,0],d:[1,0]};
+    const d=map[e.key];
+    if(d){ e.preventDefault(); setDir(d[0],d[1]); }
+    if(e.key===' '){ e.preventDefault(); togglePause(); }
+});
+
+let tx=0,ty=0;
+canvas.addEventListener('touchstart',e=>{ initAudio(); tx=e.touches[0].clientX; ty=e.touches[0].clientY; e.preventDefault(); },{passive:false});
+canvas.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+    if(Math.max(Math.abs(dx),Math.abs(dy))<20) return;
+    if(Math.abs(dx)>Math.abs(dy)) setDir(dx>0?1:-1,0);
+    else setDir(0,dy>0?1:-1);
+    e.preventDefault();
+},{passive:false});
+
+// ===================================================
+// PAUSE / MUTE
+// ===================================================
+function togglePause(){
+    if(!gameRunning||!started) return;
+    paused=!paused;
+    if(paused){ clearInterval(loopId); stopBgMusic(); showOverlay(overlays.pause); document.getElementById('pauseBtn').textContent='▶️'; }
+    else { hideOverlay(overlays.pause); document.getElementById('pauseBtn').textContent='⏸'; startBgMusic(); scheduleLoop(); }
+}
+
+document.getElementById('pauseBtn').addEventListener('click',()=>{ playClick(); togglePause(); });
+document.getElementById('resumeBtn').addEventListener('click',()=>{ playClick(); togglePause(); });
+document.getElementById('menuFromPauseBtn').addEventListener('click',()=>{ playClick(); clearInterval(loopId); stopBgMusic(); gameRunning=false; hideAllOverlays(); showScreen(screens.menu); });
+document.getElementById('muteBtn').addEventListener('click',()=>{
+    initAudio(); muted=!muted;
+    document.getElementById('muteBtn').textContent=muted?'🔇':'🔊';
+    if(muted) stopBgMusic(); else if(gameRunning&&started&&!paused) startBgMusic();
+});
+document.getElementById('menuFromGameBtn').addEventListener('click',()=>{ playClick(); clearInterval(loopId); stopBgMusic(); gameRunning=false; hideAllOverlays(); showScreen(screens.menu); });
+
+// ===================================================
+// OVERLAY BUTTONS
+// ===================================================
+document.getElementById('retryBtn').addEventListener('click',()=>{ playClick(); hideAllOverlays(); if(isInfinite) startInfinite(); else startLevel(currentLevel); });
+document.getElementById('restartBtn').addEventListener('click',()=>{ playClick(); hideAllOverlays(); startLevel(currentLevel); });
+document.getElementById('gameOverMenuBtn').addEventListener('click',()=>{ playClick(); hideAllOverlays(); showScreen(screens.menu); });
+document.getElementById('nextLevelBtn').addEventListener('click',()=>{ playClick(); hideAllOverlays(); startLevel(currentLevel+1); });
+document.getElementById('victoryBtn').addEventListener('click',()=>{ playClick(); hideAllOverlays(); showScreen(screens.menu); });
+
+function submitName(){
+    const name=document.getElementById('playerNameInput').value.trim()||'Anonyme';
+    localStorage.setItem('snake_pseudo',name);
+    addScore(name,pendingScore,overlays.name._mode,overlays.name._tab);
+    const cb=overlays.name._cb;
+    hideOverlay(overlays.name);
+    if(cb) cb();
+}
+document.getElementById('saveNameBtn').addEventListener('click',submitName);
+document.getElementById('skipNameBtn').addEventListener('click',()=>{ const cb=overlays.name._cb; hideOverlay(overlays.name); if(cb) cb(); });
+document.getElementById('playerNameInput').addEventListener('keydown',e=>{ if(e.key==='Enter') submitName(); });
+
+// SCORES TABS
+document.getElementById('tabInfinite').addEventListener('click',()=>{ playClick(); scoreMode='infinite'; document.getElementById('tabInfinite').classList.add('active'); document.getElementById('tabLevels').classList.remove('active'); renderScores(); });
+document.getElementById('tabLevels').addEventListener('click',()=>{ playClick(); scoreMode='levels'; document.getElementById('tabLevels').classList.add('active'); document.getElementById('tabInfinite').classList.remove('active'); renderScores(); });
+document.getElementById('tabNormal').addEventListener('click',()=>{ playClick(); scoreTab='normal'; document.getElementById('tabNormal').classList.add('active'); document.getElementById('tabCheater').classList.remove('active'); renderScores(); });
+document.getElementById('tabCheater').addEventListener('click',()=>{ playClick(); scoreTab='cheater'; document.getElementById('tabCheater').classList.add('active'); document.getElementById('tabNormal').classList.remove('active'); renderScores(); });
+
+// MENU
+document.getElementById('startBtn').addEventListener('click',()=>{ initAudio(); playClick(); buildLevelCards(); showScreen(screens.levelSelect); });
+document.getElementById('infiniteBtn').addEventListener('click',()=>{ initAudio(); playClick(); startInfinite(); });
+document.getElementById('scoresBtn').addEventListener('click',()=>{ initAudio(); playClick(); scoreMode='infinite'; scoreTab='normal'; document.getElementById('tabInfinite').classList.add('active'); document.getElementById('tabLevels').classList.remove('active'); document.getElementById('tabNormal').classList.add('active'); document.getElementById('tabCheater').classList.remove('active'); renderScores(); showScreen(screens.scores); });
+document.getElementById('cheatBtn').addEventListener('click',()=>{ initAudio(); playClick(); showScreen(screens.cheat); });
+document.getElementById('levelBackBtn').addEventListener('click',()=>{ playClick(); showScreen(screens.menu); });
+document.getElementById('cheatBackBtn').addEventListener('click',()=>{ playClick(); showScreen(screens.menu); });
+document.getElementById('scoresBackBtn').addEventListener('click',()=>{ playClick(); showScreen(screens.menu); });
+
+// CHEATS
+document.getElementById('cheatInput').addEventListener('input',function(){
+    document.getElementById('cheatList').style.display=this.value.toLowerCase().trim()==='god'?'flex':'none';
+});
+['chInvincible','chSlow','chFast','chDouble'].forEach(id=>{
+    document.getElementById(id).addEventListener('change',function(){
+        if(id==='chInvincible') chInvincible=this.checked;
+        if(id==='chSlow'){ chSlow=this.checked; if(chSlow){ chFast=false; document.getElementById('chFast').checked=false; } }
+        if(id==='chFast'){ chFast=this.checked; if(chFast){ chSlow=false; document.getElementById('chSlow').checked=false; } }
+        if(id==='chDouble') chDouble=this.checked;
+    });
+});
+
+// INIT
+showScreen(screens.menu);
+</script>
+</body>
+</html>
