@@ -24,7 +24,7 @@ h1 {
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    max-width: 500px;
+    max-width: 700px;
     margin: 40px auto;
     gap: 25px;
 }
@@ -41,6 +41,8 @@ h1 {
 /* Couleurs */
 .green { border: 2px solid #4ade80; }
 .blue { border: 2px solid #22d3ee; }
+.red { border: 2px solid #f87171; }
+.purple { border: 2px solid #a855f7; }
 
 /* Hover */
 .card:hover {
@@ -73,17 +75,7 @@ h1 {
         30px 30px #4ade80;
 }
 
-.snake-preview::after {
-    content: "";
-    position: absolute;
-    width: 10px;
-    height: 10px;
-    background: lime;
-    left: 30px;
-    top: 30px;
-}
-
-/* 👾 Neon Invaders (petits ennemis) */
+/* 👾 Invader */
 .invader-preview::before {
     content: "";
     position: absolute;
@@ -96,6 +88,26 @@ h1 {
         0 15px #22d3ee,
         30px 15px #22d3ee,
         15px 30px #22d3ee;
+}
+
+/* ❌ Échec (croix) */
+.echec-preview::before {
+    content: "✖";
+    position: absolute;
+    font-size: 40px;
+    color: #f87171;
+    top: 25px;
+    left: 30px;
+}
+
+/* ⭕ Morpion */
+.morpion-preview::before {
+    content: "⭕";
+    position: absolute;
+    font-size: 40px;
+    color: #a855f7;
+    top: 25px;
+    left: 30px;
 }
 
 /* Nom */
@@ -129,6 +141,20 @@ h1 {
     <a href="neon-invaders.html" class="card blue">
         <div class="preview invader-preview"></div>
         <div class="name">👾 Neon Invaders</div>
+        <div class="stars">⭐</div>
+    </a>
+
+    <!-- ❌ Échec -->
+    <a href="echec.html" class="card red">
+        <div class="preview echec-preview"></div>
+        <div class="name">♟️ Échec</div>
+        <div class="stars">⭐</div>
+    </a>
+
+    <!-- ⭕ Morpion -->
+    <a href="morpion.html" class="card purple">
+        <div class="preview morpion-preview"></div>
+        <div class="name">⭕ Morpion</div>
         <div class="stars">⭐</div>
     </a>
 
