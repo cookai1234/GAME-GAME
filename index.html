@@ -226,6 +226,8 @@ h1 {
 .blue { color: #22d3ee; }
 .red { color: #f87171; }
 .purple { color: #a855f7; }
+.yellow { color: #fbbf24; }
+.orange { color: #fb923c; }
 
 .green:hover { 
     box-shadow: 0 0 30px #4ade80, 0 0 60px rgba(74, 222, 128, 0.4), inset 0 0 20px rgba(74, 222, 128, 0.1);
@@ -238,6 +240,12 @@ h1 {
 }
 .purple:hover { 
     box-shadow: 0 0 30px #a855f7, 0 0 60px rgba(168, 85, 247, 0.4), inset 0 0 20px rgba(168, 85, 247, 0.1);
+}
+.yellow:hover { 
+    box-shadow: 0 0 30px #fbbf24, 0 0 60px rgba(251, 191, 36, 0.4), inset 0 0 20px rgba(251, 191, 36, 0.1);
+}
+.orange:hover { 
+    box-shadow: 0 0 30px #fb923c, 0 0 60px rgba(251, 146, 60, 0.4), inset 0 0 20px rgba(251, 146, 60, 0.1);
 }
 
 .card:hover {
@@ -382,6 +390,84 @@ h1 {
     50% { opacity: 0.6; transform: scale(1.1); }
 }
 
+/* 🏓 Pong Neon */
+.pong-neon-preview::before {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #fbbf24;
+    border-radius: 50%;
+    top: 40%;
+    left: 20%;
+    animation: pongBounce 2s ease-in-out infinite;
+    box-shadow: 0 0 10px #fbbf24, 0 0 20px #fbbf24;
+}
+
+.pong-neon-preview::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 30px;
+    background: #fbbf24;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 10px #fbbf24, 0 0 20px #fbbf24;
+    animation: paddleMove 2s ease-in-out infinite;
+}
+
+@keyframes pongBounce {
+    0%, 100% {
+        transform: translate(0, 0);
+    }
+    50% {
+        transform: translate(50px, -30px);
+    }
+}
+
+@keyframes paddleMove {
+    0%, 100% { transform: translateY(-50%); }
+    50% { transform: translateY(20px); }
+}
+
+/* ⚫ Puissance 4 */
+.puissance-4-preview::before {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #f87171;
+    border-radius: 50%;
+    top: 10%;
+    left: 30%;
+    animation: dropChip 2s ease-in-out infinite;
+    box-shadow: 0 0 10px #f87171, 0 0 20px #f87171;
+}
+
+.puissance-4-preview::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: #fbbf24;
+    border-radius: 50%;
+    top: 10%;
+    right: 30%;
+    animation: dropChip 2s ease-in-out infinite;
+    box-shadow: 0 0 10px #fbbf24, 0 0 20px #fbbf24;
+    animation-delay: 0.5s;
+}
+
+@keyframes dropChip {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(40px);
+    }
+}
+
 /* Nom du jeu */
 .name {
     font-weight: 700;
@@ -510,6 +596,22 @@ h1 {
     <a href="morpion.html" class="card purple">
         <div class="preview morpion-preview"></div>
         <div class="name">⭕ MORPION</div>
+        <div class="stars">★ ☆ ☆ ☆ ☆</div>
+        <div class="play-badge"><span>▶ PLAY</span></div>
+    </a>
+
+    <!-- 🏓 Pong Neon -->
+    <a href="pong-neon.html" class="card yellow">
+        <div class="preview pong-neon-preview"></div>
+        <div class="name">🏓 PONG NEON</div>
+        <div class="stars">★ ☆ ☆ ☆ ☆</div>
+        <div class="play-badge"><span>▶ PLAY</span></div>
+    </a>
+
+    <!-- ⚫ Puissance 4 -->
+    <a href="puissance-4.html" class="card orange">
+        <div class="preview puissance-4-preview"></div>
+        <div class="name">⚫ PUISSANCE 4</div>
         <div class="stars">★ ☆ ☆ ☆ ☆</div>
         <div class="play-badge"><span>▶ PLAY</span></div>
     </a>
