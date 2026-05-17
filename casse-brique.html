@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Casse-Brique</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Arial', sans-serif;
+        color: white;
+        overflow: hidden;
+        padding: 10px;
+    }
+    h1 {
+        font-size: clamp(1.5rem, 4vw, 2.5rem);
+        margin-bottom: 10px;
+        text-shadow: 0 0 20px #00d4ff;
+        color: #00d4ff;
+        letter-spacing: 3px;
+    }
+    .info {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        max-width: 600px;
+        margin-bottom: 10px;
+        font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+        font-weight: bold;
+    }
+    .info span { color: #00d4ff; }
+    canvas {
+        background: linear-gradient(180deg, #0a0a1f, #1a0a2e);
+        border: 3px solid #00d4ff;
+        border-radius: 10px;
+        box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        max-width: 100%;
+        touch-action: none;
+    }
+    .controls {
+        margin-top: 15px;
+        font-size: 0.9rem;
+        opacity: 0.8;
+        text-align: center;
+    }
+    button {
+        margin-top: 15px;
+        padding: 10px 25px;
+        font-size: 1rem;
+        background: #00d4ff;
+        color: #0a0a1f;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s;
+        box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+    }
+    button:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 25px rgba(0, 212, 255, 0.8);
+    }
+    .message {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(0, 0, 0, 0.9);
+        padding: 30px 50px;
+        border-radius: 15px;
+        border: 2px solid #00d4ff;
+        text-align: center;
+        display: none;
+        z-index: 10;
+    }
+    .message h2 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+        color: #00d4ff;
+    }
+</style>
+</head>
+<body>
+    <h1>🎮 CASSE-BRIQUE 🎮</h1>
+    <div class="info">
+        <div>Score: <span id="score">0</span></div>
+        <div>Vies: <span id="lives">3</span></div>
+        <div>Niveau: <span id="level">1</span></div>
+    </div>
+    <canvas id="game" width="600" height="450"></canvas>
+    <div class="controls">
+        ⌨️ Flèches ← → ou souris/tactile pour bouger
+    </div>
+    <button onclick="startGame()">Nouvelle Partie</button>
+
+    <div class="message" id="message">
+        <h2 id="messageTitle">Game Over</h2>
+        <p id="messageText">Cliquez sur Nouvelle Partie</p>
+    </div>
+
+<script>
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const scoreEl = document.getElementById('score');
+const livesEl = document.getElementById('lives');
+const levelEl = document.getElementById('level');
+const messageEl = document.getElementById('message');
+const messageTitle = document.getElementById('messageTitle');
+const messageText = document.getElementById('messageText');
+
+let W = canvas.width;
+let H = canvas.height;
+
+let paddle, ball, bricks, score, lives, level, running, particles;
+
+const COLORS = ['#ff006e', '#fb5607', '#ffbe0b', '#8338ec', '#3a86ff', '#06ffa5'];
+
+function initGame() {
+    paddle = {
+        w: 90,
+        h: 12,
+        x: W / 2 - 45,
+        y: H - 30,
+        speed: 7,
+        dx: 0
+    };
+    ball = {
+        x: W / 2,
+        y: H - 50,
+        r: 8,
+        dx: 4,
+        dy: -4,
+        speed: 4
+    };
+    score = 0;
+    lives = 3;
+    level = 1;
+    particles = [];
+    createBricks();
+    updateUI();
+}
+
+function createBricks() {
+    bricks = [];
+    const rows = 4 + level;
+    const cols = 8;
+    const padding = 5;
+    const offsetTop = 40;
+    const offsetLeft = 25;
+    const brickW = (W - offsetLeft * 2 - padding * (cols - 1)) / cols;
+    const brickH = 20;
+    
+    for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+            bricks.push({
+                x: offsetLeft + c * (brickW + padding),
+                y: offsetTop + r * (brickH + padding),
+                w: brickW,
+                h: brickH,
+                color: COLORS[r % COLORS.length],
+                alive: true,
+                points: (rows - r) * 10
+            });
+        }
+    }
+}
+
+function updateUI() {
+    scoreEl.textContent = score;
+    livesEl.textContent = lives;
+    levelEl.textContent = level;
+}
+
+function drawPaddle() {
+    const grad = ctx.createLinearGradient(paddle.x, paddle.y, paddle.x, paddle.y + paddle.h);
+    grad.addColorStop(0, '#00d4ff');
+    grad.addColorStop(1, '#0077be');
+    ctx.fillStyle = grad;
+    ctx.shadowColor = '#00d4ff';
+    ctx.shadowBlur = 15;
+    ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+    ctx.shadowBlur = 0;
+}
+
+function drawBall() {
+    const grad = ctx.createRadialGradient(ball.x, ball.y, 0, ball.x, ball.y, ball.r);
+    grad.addColorStop(0, '#fff');
+    grad.addColorStop(1, '#ffbe0b');
+    ctx.fillStyle = grad;
+    ctx.shadowColor = '#ffbe0b';
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+}
+
+function drawBricks() {
+    bricks.forEach(b => {
+        if (!b.alive) return;
+        ctx.fillStyle = b.color;
+        ctx.shadowColor = b.color;
+        ctx.shadowBlur = 10;
+        ctx.fillRect(b.x, b.y, b.w, b.h);
+        ctx.shadowBlur = 0;
+        // shine
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        ctx.fillRect(b.x, b.y, b.w, 4);
+    });
+}
+
+function spawnParticles(x, y, color) {
+    for (let i = 0; i < 8; i++) {
+        particles.push({
+            x, y,
+            dx: (Math.random() - 0.5) * 6,
+            dy: (Math.random() - 0.5) * 6,
+            life: 30,
+            color
+        });
+    }
+}
+
+function updateParticles() {
+    particles = particles.filter(p => p.life > 0);
+    particles.forEach(p => {
+        p.x += p.dx;
+        p.y += p.dy;
+        p.life--;
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life / 30;
+        ctx.fillRect(p.x, p.y, 4, 4);
+        ctx.globalAlpha = 1;
+    });
+}
+
+function movePaddle() {
+    paddle.x += paddle.dx;
+    if (paddle.x < 0) paddle.x = 0;
+    if (paddle.x + paddle.w > W) paddle.x = W - paddle.w;
+}
+
+function moveBall() {
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+    
+    // walls
+    if (ball.x + ball.r > W || ball.x - ball.r < 0) ball.dx *= -1;
+    if (ball.y - ball.r < 0) ball.dy *= -1;
+    
+    // paddle
+    if (ball.y + ball.r > paddle.y && 
+        ball.y - ball.r < paddle.y + paddle.h &&
+        ball.x > paddle.x && 
+        ball.x < paddle.x + paddle.w) {
+        ball.dy = -Math.abs(ball.dy);
+        // angle based on hit position
+        const hitPos = (ball.x - (paddle.x + paddle.w / 2)) / (paddle.w / 2);
+        ball.dx = hitPos * 5;
+    }
+    
+    // bricks
+    bricks.forEach(b => {
+        if (!b.alive) return;
+        if (ball.x + ball.r > b.x && 
+            ball.x - ball.r < b.x + b.w &&
+            ball.y + ball.r > b.y && 
+            ball.y - ball.r < b.y + b.h) {
+            ball.dy *= -1;
+            b.alive = false;
+            score += b.points;
+            spawnParticles(b.x + b.w/2, b.y + b.h/2, b.color);
+            updateUI();
+        }
+    });
+    
+    // bottom
+    if (ball.y + ball.r > H) {
+        lives--;
+        updateUI();
+        if (lives <= 0) {
+            running = false;
+            showMessage('💀 GAME OVER', `Score final : ${score}`);
+        } else {
+            resetBall();
+        }
+    }
+    
+    // win level
+    if (bricks.every(b => !b.alive)) {
+        level++;
+        ball.speed += 0.5;
+        updateUI();
+        createBricks();
+        resetBall();
+        showMessage('🎉 NIVEAU SUIVANT !', `Niveau ${level}`);
+        setTimeout(() => { messageEl.style.display = 'none'; }, 1500);
+    }
+}
+
+function resetBall() {
+    ball.x = W / 2;
+    ball.y = H - 50;
+    const angle = (Math.random() * 0.5 + 0.25) * Math.PI;
+    ball.dx = Math.cos(angle) * ball.speed * (Math.random() < 0.5 ? 1 : -1);
+    ball.dy = -Math.abs(Math.sin(angle) * ball.speed);
+    paddle.x = W / 2 - paddle.w / 2;
+}
+
+function showMessage(title, text) {
+    messageTitle.textContent = title;
+    messageText.textContent = text;
+    messageEl.style.display = 'block';
+}
+
+function gameLoop() {
+    if (!running) return;
+    ctx.clearRect(0, 0, W, H);
+    
+    movePaddle();
+    moveBall();
+    
+    drawBricks();
+    drawPaddle();
+    drawBall();
+    updateParticles();
+    
+    requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    messageEl.style.display = 'none';
+    initGame();
+    running = true;
+    gameLoop();
+}
+
+// Keyboard
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight') paddle.dx = paddle.speed;
+    if (e.key === 'ArrowLeft') paddle.dx = -paddle.speed;
+});
+document.addEventListener('keyup', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') paddle.dx = 0;
+});
+
+// Mouse
+canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / rect.width;
+    const x = (e.clientX - rect.left) * scale;
+    paddle.x = x - paddle.w / 2;
+    if (paddle.x < 0) paddle.x = 0;
+    if (paddle.x + paddle.w > W) paddle.x = W - paddle.w;
+});
+
+// Touch
+canvas.addEventListener('touchmove', e => {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const scale = canvas.width / rect.width;
+    const x = (e.touches[0].clientX - rect.left) * scale;
+    paddle.x = x - paddle.w / 2;
+    if (paddle.x < 0) paddle.x = 0;
+    if (paddle.x + paddle.w > W) paddle.x = W - paddle.w;
+}, { passive: false });
+
+startGame();
+</script>
+</body>
+</html>
