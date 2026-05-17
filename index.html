@@ -228,6 +228,7 @@ h1 {
 .purple { color: #a855f7; }
 .yellow { color: #fbbf24; }
 .orange { color: #fb923c; }
+.pink { color: #ec4899; }
 
 .green:hover { 
     box-shadow: 0 0 30px #4ade80, 0 0 60px rgba(74, 222, 128, 0.4), inset 0 0 20px rgba(74, 222, 128, 0.1);
@@ -246,6 +247,9 @@ h1 {
 }
 .orange:hover { 
     box-shadow: 0 0 30px #fb923c, 0 0 60px rgba(251, 146, 60, 0.4), inset 0 0 20px rgba(251, 146, 60, 0.1);
+}
+.pink:hover { 
+    box-shadow: 0 0 30px #ec4899, 0 0 60px rgba(236, 72, 153, 0.4), inset 0 0 20px rgba(236, 72, 153, 0.1);
 }
 
 .card:hover {
@@ -468,6 +472,48 @@ h1 {
     }
 }
 
+/* 🧱 Casse-Brique */
+.cassebrique-preview::before {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 6px;
+    background: #ec4899;
+    border-radius: 2px;
+    top: 15px;
+    left: 20px;
+    box-shadow: 
+        18px 0 #ec4899,
+        36px 0 #ec4899,
+        54px 0 #ec4899,
+        0 0 10px #ec4899;
+    animation: brickRow 2s ease-in-out infinite;
+}
+
+.cassebrique-preview::after {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 6px;
+    background: #ec4899;
+    border-radius: 3px;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 15px #ec4899, 0 0 25px #ec4899;
+    animation: paddleHit 2s ease-in-out infinite;
+}
+
+@keyframes brickRow {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes paddleHit {
+    0%, 100% { transform: translateX(-50%); }
+    50% { transform: translateX(10px); }
+}
+
 /* Nom du jeu */
 .name {
     font-weight: 700;
@@ -612,6 +658,14 @@ h1 {
     <a href="puissance-4.html" class="card orange">
         <div class="preview puissance-4-preview"></div>
         <div class="name">⚫ PUISSANCE 4</div>
+        <div class="stars">★ ☆ ☆ ☆ ☆</div>
+        <div class="play-badge"><span>▶ PLAY</span></div>
+    </a>
+
+    <!-- 🧱 Casse-Brique -->
+    <a href="casse-brique.html" class="card pink">
+        <div class="preview cassebrique-preview"></div>
+        <div class="name">🧱 CASSE-BRIQUE</div>
         <div class="stars">★ ☆ ☆ ☆ ☆</div>
         <div class="play-badge"><span>▶ PLAY</span></div>
     </a>
