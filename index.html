@@ -367,6 +367,8 @@ h1 {
 .card:nth-child(7) { animation-delay: 0.35s; }
 .card:nth-child(8) { animation-delay: 0.4s; }
 .card:nth-child(9) { animation-delay: 0.45s; }
+.card:nth-child(10) { animation-delay: 0.5s; }
+.card:nth-child(11) { animation-delay: 0.55s; }
 
 @keyframes cardAppear {
     from {
@@ -830,6 +832,93 @@ h1 {
     50% { opacity: 1; }
 }
 
+/* 📦 Mots-Casés */
+.motscases-preview::before {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: #a78bfa;
+    top: 15px;
+    left: 15px;
+    box-shadow:
+        10px 0 #a78bfa,
+        20px 0 #a78bfa,
+        30px 0 #a78bfa,
+        0 10px #a78bfa,
+        10px 10px #a78bfa,
+        20px 10px #a78bfa,
+        30px 10px #a78bfa,
+        0 20px #a78bfa,
+        10px 20px #a78bfa,
+        20px 20px #a78bfa,
+        30px 20px #a78bfa;
+    animation: gridPulse 2s ease-in-out infinite;
+}
+
+.motscases-preview::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #a78bfa;
+    border-radius: 1px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 10px #a78bfa, 0 0 20px #a78bfa;
+    animation: casePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+@keyframes casePulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.2); }
+}
+
+/* 🫧 Neon Bubble Shooter */
+.bubbleshoooter-preview::before {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: radial-gradient(circle at 30% 30%, #ff6b9d, #c06c84);
+    border-radius: 50%;
+    top: 20px;
+    left: 30%;
+    box-shadow: 0 0 15px #ff6b9d, 0 0 25px #ff6b9d;
+    animation: bubbleFloat 2s ease-in-out infinite;
+}
+
+.bubbleshoooter-preview::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle at 30% 30%, #6bcf7f, #4a90a4);
+    border-radius: 50%;
+    top: 50px;
+    right: 25%;
+    box-shadow: 0 0 12px #6bcf7f, 0 0 20px #6bcf7f;
+    animation: bubbleFloat 2.5s ease-in-out infinite;
+    animation-delay: 0.3s;
+}
+
+@keyframes bubbleFloat {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-15px);
+        opacity: 0.8;
+    }
+}
+
 /* Nom du jeu */
 .name {
     font-weight: 700;
@@ -1012,7 +1101,7 @@ h1 {
         🎮 GAME<span class="amp">&</span>GAME
     </div>
     <div class="nav-stats">
-        <div>🎯 <span id="navGameCount">9</span> JEUX</div>
+        <div>🎯 <span id="navGameCount">11</span> JEUX</div>
         <div>⚡ ONLINE</div>
         <div>🔥 NEON</div>
     </div>
@@ -1127,6 +1216,24 @@ h1 {
         <div class="play-badge"><span>▶ PLAY</span></div>
     </a>
 
+    <!-- 📦 Mots-Casés -->
+    <a href="mots-casés.html" class="card purple" data-name="mots cases wordsearch" data-category="puzzle">
+        <div class="category-badge">PUZZLE</div>
+        <div class="preview motscases-preview"></div>
+        <div class="name">📦 MOTS-CASÉS</div>
+        <div class="stars">★ ☆ ☆ ☆ ☆</div>
+        <div class="play-badge"><span>▶ PLAY</span></div>
+    </a>
+
+    <!-- 🫧 Neon Bubble Shooter -->
+    <a href="neon-bubble-shooter.html" class="card" style="color: #ff6b9d;" data-name="bubble shooter neon" data-category="arcade">
+        <div class="category-badge">ARCADE</div>
+        <div class="preview bubbleshoooter-preview"></div>
+        <div class="name">🫧 BUBBLE SHOOTER</div>
+        <div class="stars">★ ☆ ☆ ☆ ☆</div>
+        <div class="play-badge"><span>▶ PLAY</span></div>
+    </a>
+
     <!-- Message aucun résultat -->
     <div class="no-results" id="noResults">
         <div class="icon">🔍</div>
@@ -1139,7 +1246,7 @@ h1 {
 <div class="stats-section">
     <div class="stat-box">
         <div class="stat-icon">🎮</div>
-        <div class="stat-value" id="totalGames">9</div>
+        <div class="stat-value" id="totalGames">11</div>
         <div class="stat-label">Jeux Disponibles</div>
     </div>
     <div class="stat-box">
@@ -1289,8 +1396,8 @@ function animateCounter(element, target) {
 window.addEventListener('load', () => {
     const totalGames = document.getElementById('totalGames');
     const navGameCount = document.getElementById('navGameCount');
-    animateCounter(totalGames, 9);
-    animateCounter(navGameCount, 9);
+    animateCounter(totalGames, 11);
+    animateCounter(navGameCount, 11);
 });
 
 // Effet de clic sur les cartes (ripple)
