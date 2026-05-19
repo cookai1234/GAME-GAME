@@ -147,6 +147,8 @@ body::after {
     color: #22d3ee;
     font-size: 0.8rem;
     letter-spacing: 1px;
+    align-items: center;
+    flex-wrap: wrap;
 }
 
 .nav-stats span {
@@ -155,39 +157,51 @@ body::after {
     text-shadow: 0 0 8px #4ade80;
 }
 
-/* Compteur en ligne animé */
+/* Compteur en ligne */
 .online-counter {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 14px;
-    background: rgba(74, 222, 128, 0.1);
-    border: 1px solid rgba(74, 222, 128, 0.4);
-    border-radius: 15px;
-    color: #4ade80;
-    font-size: 0.8rem;
+    padding: 6px 14px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(34, 211, 238, 0.5);
+    border-radius: 20px;
+    font-size: 0.75rem;
     letter-spacing: 1px;
-    text-shadow: 0 0 5px #4ade80;
-    animation: counterPulse 2s ease-in-out infinite;
+    backdrop-filter: blur(10px);
+    animation: counterGlow 2s ease-in-out infinite;
+    color: #22d3ee;
 }
 
 .online-dot {
     width: 8px;
     height: 8px;
-    background: #4ade80;
+    background: #10b981;
     border-radius: 50%;
-    box-shadow: 0 0 10px #4ade80;
+    box-shadow: 0 0 6px #10b981, 0 0 12px #10b981;
     animation: dotPulse 1.5s ease-in-out infinite;
 }
 
 @keyframes dotPulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.2); }
+    0%, 100% { 
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% { 
+        opacity: 0.6;
+        transform: scale(1.3);
+    }
 }
 
-@keyframes counterPulse {
-    0%, 100% { box-shadow: 0 0 10px rgba(74, 222, 128, 0.3); }
-    50% { box-shadow: 0 0 20px rgba(74, 222, 128, 0.5); }
+@keyframes counterGlow {
+    0%, 100% { box-shadow: 0 0 10px rgba(34, 211, 238, 0.3); }
+    50% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.6); }
+}
+
+.online-count {
+    font-weight: 700;
+    color: #4ade80;
+    text-shadow: 0 0 8px #4ade80;
 }
 
 /* Header */
@@ -1122,8 +1136,8 @@ h1 {
         font-size: 0.85rem;
     }
     .online-counter {
-        font-size: 0.7rem;
-        padding: 6px 12px;
+        font-size: 0.65rem;
+        padding: 5px 10px;
     }
 }
 </style>
@@ -1142,8 +1156,8 @@ h1 {
     <div class="nav-stats">
         <div>🎯 <span id="navGameCount">11</span> JEUX</div>
         <div class="online-counter">
-            <div class="online-dot"></div>
-            <span id="onlineCount">125</span> EN LIGNE
+            <span class="online-dot"></span>
+            <span class="online-count">0</span> EN LIGNE
         </div>
         <div>🔥 NEON</div>
     </div>
@@ -1316,26 +1330,96 @@ h1 {
 </div>
 
 <script>
-// === COMPTEUR DE PERSONNES EN LIGNE EN TEMPS RÉEL ===
-const onlineCountElement = document.getElementById('onlineCount');
-let currentOnlineCount = 125;
+// ========== WEBSOCKET POUR TEMPS RÉEL ==========
+let ws = null;
+let onlineCountElement = document.querySelector('.online-count');
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 5;
 
-function updateOnlineCount() {
-    // Variation aléatoire : +/- quelques utilisateurs
-    const variation = Math.floor(Math.random() * 7) - 3; // Entre -3 et +3
-    currentOnlineCount = Math.max(50, currentOnlineCount + variation); // Min 50 utilisateurs
-    
-    // Animation du changement
-    onlineCountElement.style.opacity = '0.7';
-    onlineCountElement.textContent = currentOnlineCount;
-    
-    setTimeout(() => {
-        onlineCountElement.style.opacity = '1';
-    }, 100);
+function connectWebSocket() {
+    try {
+        // Déterminer le protocole WebSocket (wss pour HTTPS, ws pour HTTP)
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        ws = new WebSocket(`${protocol}//localhost:8080`);
+        
+        ws.onopen = () => {
+            console.log('✅ Connecté au serveur WebSocket');
+            reconnectAttempts = 0;
+            onlineCountElement.style.color = '#4ade80';
+        };
+        
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.onlineCount !== undefined) {
+                    updateOnlineCount(data.onlineCount);
+                }
+            } catch (e) {
+                console.error('Erreur parsing message:', e);
+            }
+        };
+        
+        ws.onerror = (error) => {
+            console.error('❌ Erreur WebSocket:', error);
+            onlineCountElement.style.color = '#f87171';
+        };
+        
+        ws.onclose = () => {
+            console.log('⚠️ Connexion fermée');
+            attemptReconnect();
+        };
+        
+    } catch (error) {
+        console.error('Erreur lors de la connexion:', error);
+        attemptReconnect();
+    }
 }
 
-// Mettre à jour le compteur toutes les 3-5 secondes
-setInterval(updateOnlineCount, Math.random() * 2000 + 3000);
+function attemptReconnect() {
+    if (reconnectAttempts < maxReconnectAttempts) {
+        reconnectAttempts++;
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 30000);
+        console.log(`🔄 Reconnexion dans ${delay}ms...`);
+        setTimeout(connectWebSocket, delay);
+    } else {
+        console.error('❌ Impossible de se connecter au serveur');
+        useFallbackCounter();
+    }
+}
+
+function updateOnlineCount(count) {
+    const element = document.querySelector('.online-count');
+    element.textContent = count;
+    element.style.animation = 'none';
+    setTimeout(() => {
+        element.style.animation = 'counterGlow 0.5s ease-in-out';
+    }, 10);
+}
+
+// ========== FALLBACK: COMPTEUR SIMULÉ ==========
+function useFallbackCounter() {
+    console.log('📊 Utilisation du compteur simulé');
+    let onlineCount = 45;
+    
+    setInterval(() => {
+        const variation = Math.floor(Math.random() * 7) - 3;
+        onlineCount = Math.max(20, Math.min(onlineCount + variation, 500));
+        updateOnlineCount(onlineCount);
+    }, 2000);
+}
+
+// Initialiser WebSocket à la charge de la page
+window.addEventListener('load', () => {
+    // Essayer WebSocket pendant 5 secondes, puis fallback
+    connectWebSocket();
+    setTimeout(() => {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            useFallbackCounter();
+        }
+    }, 5000);
+});
+
+// ========== RESTE DU CODE ORIGINAL ==========
 
 // Génération des particules néon
 const colors = ['#4ade80', '#22d3ee', '#a855f7', '#f87171', '#ec4899'];
@@ -1466,7 +1550,6 @@ window.addEventListener('load', () => {
 // Effet de clic sur les cartes (ripple)
 document.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', function(e) {
-        // Petit effet visuel avant la navigation
         this.style.transform = 'translateY(-4px) scale(0.98)';
         setTimeout(() => {
             this.style.transform = '';
