@@ -155,48 +155,6 @@ body::after {
     text-shadow: 0 0 8px #4ade80;
 }
 
-/* Compteur en ligne */
-.online-counter {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 14px;
-    background: rgba(15, 23, 42, 0.7);
-    border: 1px solid rgba(34, 211, 238, 0.5);
-    border-radius: 15px;
-    font-size: 0.75rem;
-    letter-spacing: 1px;
-    backdrop-filter: blur(8px);
-    transition: all 0.3s;
-    animation: counterGlow 2s ease-in-out infinite;
-}
-
-.online-dot {
-    display: inline-block;
-    width: 8px;
-    height: 8px;
-    background: #4ade80;
-    border-radius: 50%;
-    box-shadow: 0 0 8px #4ade80;
-    animation: dotPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes dotPulse {
-    0%, 100% { 
-        box-shadow: 0 0 8px #4ade80;
-        transform: scale(1);
-    }
-    50% { 
-        box-shadow: 0 0 15px #4ade80;
-        transform: scale(1.2);
-    }
-}
-
-@keyframes counterGlow {
-    0%, 100% { border-color: rgba(34, 211, 238, 0.5); }
-    50% { border-color: rgba(74, 222, 128, 0.7); }
-}
-
 /* Header */
 .header {
     padding: 60px 20px 30px;
@@ -1128,10 +1086,6 @@ h1 {
     .nav-brand {
         font-size: 0.85rem;
     }
-    .online-counter {
-        font-size: 0.65rem;
-        padding: 5px 10px;
-    }
 }
 </style>
 </head>
@@ -1147,11 +1101,7 @@ h1 {
         🎮 GAME<span class="amp">&</span>GAME
     </div>
     <div class="nav-stats">
-        <div>🎯 <span id="navGameCount">11</span> JEUX</div>
-        <div class="online-counter">
-            <span class="online-dot"></span>
-            <span id="onlineCountDisplay">0</span> EN LIGNE
-        </div>
+        <div>⚡ ONLINE</div>
         <div>🔥 NEON</div>
     </div>
 </nav>
@@ -1295,7 +1245,7 @@ h1 {
 <div class="stats-section">
     <div class="stat-box">
         <div class="stat-icon">🎮</div>
-        <div class="stat-value" id="totalGames">11</div>
+        <div class="stat-value">11</div>
         <div class="stat-label">Jeux Disponibles</div>
     </div>
     <div class="stat-box">
@@ -1323,136 +1273,6 @@ h1 {
 </div>
 
 <script>
-// ===== SYSTÈME DE TRACKING UTILISATEURS EN TEMPS RÉEL =====
-// Génère une session ID unique pour chaque utilisateur
-function generateSessionId() {
-    return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-}
-
-// Stocke la session ID dans localStorage
-let sessionId = localStorage.getItem('gameSessionId');
-if (!sessionId) {
-    sessionId = generateSessionId();
-    localStorage.setItem('gameSessionId', sessionId);
-}
-
-// Connexion WebSocket
-let ws;
-let reconnectAttempts = 0;
-const maxReconnectAttempts = 5;
-const baseReconnectDelay = 1000;
-
-function connectWebSocket() {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
-    try {
-        ws = new WebSocket(wsUrl);
-        
-        ws.onopen = () => {
-            console.log('✅ Connecté au serveur WebSocket');
-            reconnectAttempts = 0;
-            
-            // Envoyer la session ID au serveur
-            ws.send(JSON.stringify({
-                type: 'register',
-                sessionId: sessionId,
-                timestamp: Date.now()
-            }));
-        };
-        
-        ws.onmessage = (event) => {
-            try {
-                const data = JSON.parse(event.data);
-                if (data.type === 'userCount') {
-                    updateOnlineCount(data.count);
-                }
-            } catch (e) {
-                console.error('Erreur parsing WebSocket:', e);
-            }
-        };
-        
-        ws.onerror = (error) => {
-            console.error('❌ Erreur WebSocket:', error);
-            attemptReconnect();
-        };
-        
-        ws.onclose = () => {
-            console.log('⚠️ WebSocket fermée');
-            attemptReconnect();
-        };
-        
-    } catch (error) {
-        console.error('Erreur connexion WebSocket:', error);
-        attemptReconnect();
-    }
-}
-
-function attemptReconnect() {
-    if (reconnectAttempts < maxReconnectAttempts) {
-        reconnectAttempts++;
-        const delay = Math.min(baseReconnectDelay * Math.pow(2, reconnectAttempts - 1), 30000);
-        console.log(`🔄 Tentative de reconnexion dans ${delay}ms...`);
-        setTimeout(connectWebSocket, delay);
-    } else {
-        console.log('❌ Impossible de se connecter au serveur WebSocket. Utilisation du fallback.');
-        useSimulatedOnlineCount();
-    }
-}
-
-// Fallback : compteur simulé si WebSocket échoue
-function useSimulatedOnlineCount() {
-    let onlineCount = 45;
-    
-    setInterval(() => {
-        const variation = Math.floor(Math.random() * 7) - 3;
-        onlineCount = Math.max(10, Math.min(onlineCount + variation, 500));
-        updateOnlineCount(onlineCount);
-    }, 2000 + Math.random() * 3000); // 2-5 secondes
-}
-
-function updateOnlineCount(count) {
-    const display = document.getElementById('onlineCountDisplay');
-    if (display) {
-        display.textContent = count;
-        console.log(`👥 Utilisateurs en ligne: ${count}`);
-    }
-}
-
-// Heartbeat : signale que l'utilisateur est toujours actif
-function sendHeartbeat() {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-            type: 'heartbeat',
-            sessionId: sessionId,
-            timestamp: Date.now()
-        }));
-    }
-}
-
-// Envoyer un heartbeat toutes les 30 secondes
-setInterval(sendHeartbeat, 30000);
-
-// Envoyer un heartbeat quand l'utilisateur bouge la souris ou clique
-document.addEventListener('mousemove', sendHeartbeat);
-document.addEventListener('click', sendHeartbeat);
-document.addEventListener('keypress', sendHeartbeat);
-
-// Notifier le serveur avant de partir
-window.addEventListener('beforeunload', () => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-            type: 'disconnect',
-            sessionId: sessionId
-        }));
-    }
-});
-
-// Initialiser la connexion WebSocket
-connectWebSocket();
-
-// ===== RESTE DU CODE EXISTANT =====
-
 // Génération des particules néon
 const colors = ['#4ade80', '#22d3ee', '#a855f7', '#f87171', '#ec4899'];
 const particlesContainer = document.getElementById('particles');
@@ -1554,29 +1374,6 @@ filterBtns.forEach(btn => {
         currentFilter = btn.dataset.filter;
         filterGames();
     });
-});
-
-// Animation compteur de jeux
-function animateCounter(element, target) {
-    let current = 0;
-    const duration = 1500;
-    const increment = target / (duration / 30);
-    
-    const timer = setInterval(() => {
-        current += increment;
-        if (current >= target) {
-            current = target;
-            clearInterval(timer);
-        }
-        element.textContent = Math.floor(current);
-    }, 30);
-}
-
-window.addEventListener('load', () => {
-    const totalGames = document.getElementById('totalGames');
-    const navGameCount = document.getElementById('navGameCount');
-    animateCounter(totalGames, 11);
-    animateCounter(navGameCount, 11);
 });
 
 // Effet de clic sur les cartes (ripple)
