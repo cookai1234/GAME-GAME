@@ -1134,8 +1134,8 @@ h1 {
 <body>
 
 <!-- Audio de fond -->
-<audio id="backgroundMusic" loop preload="auto">
-    <source src="slimeyfox-arcade-80s-era-481352.mp3" type="audio/mpeg">
+<audio id="backgroundMusic" loop>
+    <source src="./slimeyfox-arcade-80s-era-481352.mp3" type="audio/mpeg">
 </audio>
 
 <!-- Bouton de contrôle musique -->
@@ -1324,13 +1324,19 @@ h1 {
 </div>
 
 <script>
+console.log('🎮 GAME&GAME est en cours de chargement...');
+
 // === GESTION DE LA MUSIQUE DE FOND ===
 const backgroundMusic = document.getElementById('backgroundMusic');
 const musicToggle = document.getElementById('musicToggle');
 let isMusicPlaying = false;
 
+console.log('Audio element:', backgroundMusic);
+console.log('Audio source:', backgroundMusic.querySelector('source').src);
+
 // Fonction pour démarrer la musique
 function playMusic() {
+    console.log('Tentative de lecture de la musique...');
     if (backgroundMusic.paused) {
         const playPromise = backgroundMusic.play();
         if (playPromise !== undefined) {
@@ -1338,10 +1344,10 @@ function playMusic() {
                 .then(() => {
                     isMusicPlaying = true;
                     musicToggle.classList.add('playing');
-                    console.log('Musique en cours de lecture');
+                    console.log('✅ Musique en cours de lecture');
                 })
                 .catch(error => {
-                    console.log('Erreur de lecture:', error);
+                    console.error('❌ Erreur de lecture:', error);
                 });
         }
     }
@@ -1350,6 +1356,7 @@ function playMusic() {
 // Au premier clic n'importe où, démarrer la musique
 document.addEventListener('click', () => {
     if (!isMusicPlaying) {
+        console.log('Premier clic détecté - Démarrage de la musique');
         playMusic();
     }
 }, { once: true });
@@ -1357,27 +1364,41 @@ document.addEventListener('click', () => {
 // Toggle musique au clic du bouton
 musicToggle.addEventListener('click', (e) => {
     e.stopPropagation();
+    console.log('Clic sur le bouton musique. État actuel:', isMusicPlaying);
     
     if (isMusicPlaying) {
         backgroundMusic.pause();
         isMusicPlaying = false;
         musicToggle.classList.remove('playing');
         musicToggle.textContent = '🔇';
-        console.log('Musique mise en pause');
+        console.log('🔇 Musique mise en pause');
     } else {
         playMusic();
         musicToggle.textContent = '🔊';
-        console.log('Musique en lecture');
     }
 });
 
 // Quand la musique se termine (grâce à loop elle devrait recommencer)
 backgroundMusic.addEventListener('ended', () => {
+    console.log('Musique terminée - Redémarrage...');
     if (isMusicPlaying) {
         backgroundMusic.currentTime = 0;
         backgroundMusic.play();
-        console.log('Musique recommencée');
     }
+});
+
+// Log des erreurs d'audio
+backgroundMusic.addEventListener('error', (e) => {
+    console.error('❌ Erreur audio:', e);
+    console.error('Code erreur:', backgroundMusic.error?.code);
+});
+
+backgroundMusic.addEventListener('loadstart', () => {
+    console.log('📥 Chargement de l\'audio en cours...');
+});
+
+backgroundMusic.addEventListener('canplay', () => {
+    console.log('✅ Audio peut être joué');
 });
 
 // === GÉNÉRATION DES PARTICULES NÉON ===
@@ -1493,6 +1514,8 @@ document.querySelectorAll('.card').forEach(card => {
         }, 150);
     });
 });
+
+console.log('✅ GAME&GAME chargé avec succès!');
 </script>
 
 </body>
