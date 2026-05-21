@@ -403,6 +403,7 @@ h1 {
 .card:nth-child(9) { animation-delay: 0.45s; }
 .card:nth-child(10) { animation-delay: 0.5s; }
 .card:nth-child(11) { animation-delay: 0.55s; }
+.card:nth-child(12) { animation-delay: 0.6s; }
 
 @keyframes cardAppear {
     from {
@@ -953,6 +954,63 @@ h1 {
     }
 }
 
+/* 🟫 Tetris Neon */
+.tetris-preview::before {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #f59e0b;
+    top: 15px;
+    left: 20px;
+    box-shadow:
+        10px 0 #3b82f6,
+        20px 0 #f97316,
+        0 10px #8b5cf6,
+        10px 10px #ec4899,
+        20px 10px #06b6d4,
+        0 20px #10b981,
+        10px 20px #f97316,
+        20px 20px #3b82f6;
+    animation: tetrisFall 2s ease-in-out infinite;
+}
+
+.tetris-preview::after {
+    content: "";
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #f59e0b;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow:
+        8px 0 #f59e0b,
+        16px 0 #f59e0b,
+        0 0 10px #f59e0b,
+        8px 0 8px #f59e0b;
+    animation: tetrisStack 2s ease-in-out infinite;
+}
+
+@keyframes tetrisFall {
+    0%, 100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    80% {
+        transform: translateY(50px);
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes tetrisStack {
+    0%, 80% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
 /* Nom du jeu */
 .name {
     font-weight: 700;
@@ -1284,6 +1342,15 @@ h1 {
         <div class="play-badge"><span>▶ PLAY</span></div>
     </a>
 
+    <!-- 🟫 Tetris Neon -->
+    <a href="tetris-neon.html" class="card" style="color: #f59e0b;" data-name="tetris neon" data-category="classic">
+        <div class="category-badge">CLASSIC</div>
+        <div class="preview tetris-preview"></div>
+        <div class="name">🟫 TETRIS NEON</div>
+        <div class="stars">★ ☆ ☆ ☆ ☆</div>
+        <div class="play-badge"><span>▶ PLAY</span></div>
+    </a>
+
     <!-- Message aucun résultat -->
     <div class="no-results" id="noResults">
         <div class="icon">🔍</div>
@@ -1296,7 +1363,7 @@ h1 {
 <div class="stats-section">
     <div class="stat-box">
         <div class="stat-icon">🎮</div>
-        <div class="stat-value">11</div>
+        <div class="stat-value">12</div>
         <div class="stat-label">Jeux Disponibles</div>
     </div>
     <div class="stat-box">
