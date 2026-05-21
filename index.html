@@ -1134,8 +1134,9 @@ h1 {
 <body>
 
 <!-- Audio de fond -->
-<audio id="backgroundMusic" loop crossorigin="anonymous">
-    <source src="data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==" type="audio/wav">
+<audio id="backgroundMusic" loop>
+    <source src="slimeyfox-arcade-80s-era-481352.mp3" type="audio/mpeg">
+    Votre navigateur ne supporte pas l'élément audio.
 </audio>
 
 <!-- Bouton de contrôle musique -->
@@ -1329,60 +1330,29 @@ const backgroundMusic = document.getElementById('backgroundMusic');
 const musicToggle = document.getElementById('musicToggle');
 let isMusicPlaying = false;
 
-// Générer une musique Tetris avec Web Audio API
-function createTetrisMusic() {
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const now = audioContext.currentTime;
-    
-    // Notes Tetris (Korobeiniki)
-    const notes = [
-        { freq: 330, time: 0, duration: 0.5 },      // E
-        { freq: 494, time: 0.5, duration: 0.5 },    // B
-        { freq: 494, time: 1, duration: 0.25 },
-        { freq: 554, time: 1.25, duration: 0.25 },  // C#
-        { freq: 587, time: 1.5, duration: 0.5 },    // D
-        { freq: 554, time: 2, duration: 0.25 },
-        { freq: 494, time: 2.25, duration: 0.25 },
-        { freq: 440, time: 2.5, duration: 0.5 },    // A
-        { freq: 440, time: 3, duration: 0.25 },
-        { freq: 494, time: 3.25, duration: 0.25 },
-        { freq: 554, time: 3.5, duration: 0.5 },
-        { freq: 587, time: 4, duration: 1 },
-    ];
-    
-    notes.forEach(note => {
-        const osc = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-        
-        osc.connect(gain);
-        gain.connect(audioContext.destination);
-        
-        osc.frequency.value = note.freq;
-        osc.type = 'sine';
-        
-        gain.gain.setValueAtTime(0.3, now + note.time);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + note.time + note.duration);
-        
-        osc.start(now + note.time);
-        osc.stop(now + note.time + note.duration);
-    });
-}
-
-// Démarrer la musique au chargement
+// Démarrer la musique au chargement avec gestion du autoplay
 window.addEventListener('load', () => {
-    document.addEventListener('click', startMusicOnFirstInteraction);
+    // Essayer de démarrer la musique automatiquement
+    const playPromise = backgroundMusic.play();
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                isMusicPlaying = true;
+                musicToggle.classList.add('playing');
+            })
+            .catch(() => {
+                // L'autoplay a été bloqué, on attend une interaction utilisateur
+                document.addEventListener('click', startMusicOnFirstInteraction);
+            });
+    }
 });
 
 function startMusicOnFirstInteraction() {
     if (!isMusicPlaying) {
-        try {
-            createTetrisMusic();
-            setInterval(createTetrisMusic, 5000); // Rejouer tous les 5 secondes
+        backgroundMusic.play().then(() => {
             isMusicPlaying = true;
             musicToggle.classList.add('playing');
-        } catch (e) {
-            console.log('Audio API non disponible');
-        }
+        }).catch(err => console.log('Erreur lecture audio:', err));
         document.removeEventListener('click', startMusicOnFirstInteraction);
     }
 }
@@ -1391,19 +1361,15 @@ function startMusicOnFirstInteraction() {
 musicToggle.addEventListener('click', (e) => {
     e.stopPropagation();
     if (isMusicPlaying) {
+        backgroundMusic.pause();
         isMusicPlaying = false;
         musicToggle.classList.remove('playing');
         musicToggle.textContent = '🔇';
     } else {
-        try {
-            createTetrisMusic();
-            setInterval(createTetrisMusic, 5000);
-            isMusicPlaying = true;
-            musicToggle.classList.add('playing');
-            musicToggle.textContent = '🔊';
-        } catch (e) {
-            console.log('Erreur audio');
-        }
+        backgroundMusic.play().catch(err => console.log('Erreur lecture audio:', err));
+        isMusicPlaying = true;
+        musicToggle.classList.add('playing');
+        musicToggle.textContent = '🔊';
     }
 });
 
@@ -1513,6 +1479,7 @@ filterBtns.forEach(btn => {
 // Effet de clic sur les cartes (ripple)
 document.querySelectorAll('.card').forEach(card => {
     card.addEventListener('click', function(e) {
+        // Petit effet visuel avant la navigation
         this.style.transform = 'translateY(-4px) scale(0.98)';
         setTimeout(() => {
             this.style.transform = '';
