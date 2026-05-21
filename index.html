@@ -1134,9 +1134,8 @@ h1 {
 <body>
 
 <!-- Audio de fond -->
-<audio id="backgroundMusic" loop>
+<audio id="backgroundMusic" loop preload="auto">
     <source src="slimeyfox-arcade-80s-era-481352.mp3" type="audio/mpeg">
-    Votre navigateur ne supporte pas l'élément audio.
 </audio>
 
 <!-- Bouton de contrôle musique -->
@@ -1330,46 +1329,54 @@ const backgroundMusic = document.getElementById('backgroundMusic');
 const musicToggle = document.getElementById('musicToggle');
 let isMusicPlaying = false;
 
-// Démarrer la musique au chargement avec gestion du autoplay
-window.addEventListener('load', () => {
-    // Essayer de démarrer la musique automatiquement
-    const playPromise = backgroundMusic.play();
-    if (playPromise !== undefined) {
-        playPromise
-            .then(() => {
-                isMusicPlaying = true;
-                musicToggle.classList.add('playing');
-            })
-            .catch(() => {
-                // L'autoplay a été bloqué, on attend une interaction utilisateur
-                document.addEventListener('click', startMusicOnFirstInteraction);
-            });
-    }
-});
-
-function startMusicOnFirstInteraction() {
-    if (!isMusicPlaying) {
-        backgroundMusic.play().then(() => {
-            isMusicPlaying = true;
-            musicToggle.classList.add('playing');
-        }).catch(err => console.log('Erreur lecture audio:', err));
-        document.removeEventListener('click', startMusicOnFirstInteraction);
+// Fonction pour démarrer la musique
+function playMusic() {
+    if (backgroundMusic.paused) {
+        const playPromise = backgroundMusic.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => {
+                    isMusicPlaying = true;
+                    musicToggle.classList.add('playing');
+                    console.log('Musique en cours de lecture');
+                })
+                .catch(error => {
+                    console.log('Erreur de lecture:', error);
+                });
+        }
     }
 }
 
-// Toggle musique au clic
+// Au premier clic n'importe où, démarrer la musique
+document.addEventListener('click', () => {
+    if (!isMusicPlaying) {
+        playMusic();
+    }
+}, { once: true });
+
+// Toggle musique au clic du bouton
 musicToggle.addEventListener('click', (e) => {
     e.stopPropagation();
+    
     if (isMusicPlaying) {
         backgroundMusic.pause();
         isMusicPlaying = false;
         musicToggle.classList.remove('playing');
         musicToggle.textContent = '🔇';
+        console.log('Musique mise en pause');
     } else {
-        backgroundMusic.play().catch(err => console.log('Erreur lecture audio:', err));
-        isMusicPlaying = true;
-        musicToggle.classList.add('playing');
+        playMusic();
         musicToggle.textContent = '🔊';
+        console.log('Musique en lecture');
+    }
+});
+
+// Quand la musique se termine (grâce à loop elle devrait recommencer)
+backgroundMusic.addEventListener('ended', () => {
+    if (isMusicPlaying) {
+        backgroundMusic.currentTime = 0;
+        backgroundMusic.play();
+        console.log('Musique recommencée');
     }
 });
 
