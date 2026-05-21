@@ -101,6 +101,40 @@ body::after {
     }
 }
 
+/* Contrôle musique */
+.music-control {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 200;
+    background: rgba(5, 7, 20, 0.9);
+    border: 2px solid #4ade80;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
+    font-size: 1.5rem;
+}
+
+.music-control:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 30px rgba(74, 222, 128, 0.6);
+}
+
+.music-control.playing {
+    animation: musicPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes musicPulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(74, 222, 128, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(74, 222, 128, 0.8); }
+}
+
 /* Barre de navigation */
 .navbar {
     position: sticky;
@@ -1086,11 +1120,29 @@ h1 {
     .nav-brand {
         font-size: 0.85rem;
     }
+    .music-control {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
 }
 </style>
 </head>
 
 <body>
+
+<!-- Audio de fond -->
+<audio id="backgroundMusic" loop>
+    <source src="https://assets.pixabay.com/download/audio/2022-03-15/3d82f408-1e5b-434e-8bba-d503a8d58f5c.mp3" type="audio/mpeg">
+    Votre navigateur ne supporte pas l'élément audio.
+</audio>
+
+<!-- Bouton de contrôle musique -->
+<div class="music-control" id="musicToggle" title="Activer/Désactiver la musique">
+    🔊
+</div>
 
 <!-- Particules flottantes -->
 <div class="particles" id="particles"></div>
@@ -1273,7 +1325,60 @@ h1 {
 </div>
 
 <script>
-// Génération des particules néon
+// === GESTION DE LA MUSIQUE DE FOND ===
+const backgroundMusic = document.getElementById('backgroundMusic');
+const musicToggle = document.getElementById('musicToggle');
+let isMusicPlaying = false;
+
+// Démarrer la musique au chargement avec gestion du autoplay
+window.addEventListener('load', () => {
+    // Essayer de démarrer la musique automatiquement
+    const playPromise = backgroundMusic.play();
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                isMusicPlaying = true;
+                musicToggle.classList.add('playing');
+            })
+            .catch(() => {
+                // L'autoplay a été bloqué, on attend une interaction utilisateur
+                document.addEventListener('click', startMusicOnFirstInteraction);
+            });
+    }
+});
+
+function startMusicOnFirstInteraction() {
+    if (!isMusicPlaying) {
+        backgroundMusic.play().then(() => {
+            isMusicPlaying = true;
+            musicToggle.classList.add('playing');
+        });
+        document.removeEventListener('click', startMusicOnFirstInteraction);
+    }
+}
+
+// Toggle musique au clic
+musicToggle.addEventListener('click', () => {
+    if (isMusicPlaying) {
+        backgroundMusic.pause();
+        isMusicPlaying = false;
+        musicToggle.classList.remove('playing');
+        musicToggle.textContent = '🔇';
+    } else {
+        backgroundMusic.play();
+        isMusicPlaying = true;
+        musicToggle.classList.add('playing');
+        musicToggle.textContent = '🔊';
+    }
+});
+
+// Gérer la fin de la musique (elle boucle grâce à l'attribut loop)
+backgroundMusic.addEventListener('ended', () => {
+    backgroundMusic.currentTime = 0;
+    backgroundMusic.play();
+});
+
+// === GÉNÉRATION DES PARTICULES NÉON ===
 const colors = ['#4ade80', '#22d3ee', '#a855f7', '#f87171', '#ec4899'];
 const particlesContainer = document.getElementById('particles');
 
