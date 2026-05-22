@@ -386,11 +386,11 @@ let keys = {};
 let player, bullets, enemies, enemyBullets, particles, stars, powerups, ufo, floatTexts, shields;
 let enemyDir = 1, enemyMoveTimer = 0, enemyShootTimer = 0, ufoTimer = 0;
 
+// BOMB power-up retiré de la liste
 const POWERUPS = {
   RAPID: { color: '#ff0', symbol: 'R', name: 'TIR RAPIDE' },
   TRIPLE: { color: '#0f0', symbol: 'T', name: 'TRIPLE TIR' },
   SHIELD: { color: '#0af', symbol: 'S', name: 'BOUCLIER' },
-  BOMB: { color: '#f50', symbol: 'B', name: 'BOMBE' },
   LIFE: { color: '#f0f', symbol: '♥', name: 'VIE EXTRA' }
 };
 
@@ -472,7 +472,6 @@ function initLevel() {
     const bs = 6;
     for (let by = 0; by < shieldH/bs; by++) {
       for (let bx = 0; bx < shieldW/bs; bx++) {
-        // Carve arch
         if (by > shieldH/bs - 3 && bx > 3 && bx < shieldW/bs - 4) continue;
         blocks.push({ x: sx + bx*bs, y: sy + by*bs, w: bs, h: bs, hp: 3 });
       }
@@ -530,7 +529,6 @@ function drawPlayer() {
   if (player.invuln > 0 && Math.floor(player.invuln / 4) % 2) return;
   const { x, y, w, h } = player;
 
-  // Shield
   if (player.shieldHits > 0) {
     ctx.strokeStyle = '#0af';
     ctx.shadowBlur = 20;
@@ -553,10 +551,8 @@ function drawPlayer() {
   ctx.lineTo(x, y + h);
   ctx.closePath();
   ctx.fill();
-  // Cockpit
   ctx.fillStyle = '#fff';
   ctx.fillRect(x + w/2 - 3, y + 8, 6, 10);
-  // Engines
   ctx.fillStyle = '#ff0';
   ctx.fillRect(x + 5, y + h - 4, 4, 6 + Math.random() * 4);
   ctx.fillRect(x + w - 9, y + h - 4, 4, 6 + Math.random() * 4);
@@ -591,7 +587,6 @@ function drawEnemy(e) {
       }
     }
   }
-  // HP indicator
   if (e.maxHp > 1 && e.hp < e.maxHp) {
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#fff';
@@ -612,7 +607,6 @@ function drawUFO() {
   ctx.beginPath();
   ctx.ellipse(ufo.x + ufo.w/2, ufo.y + ufo.h/3, ufo.w/3, ufo.h/4, 0, 0, Math.PI*2);
   ctx.fill();
-  // Lights
   for (let i = 0; i < 3; i++) {
     ctx.fillStyle = (Math.floor(Date.now()/100) + i) % 2 ? '#fff' : '#0ff';
     ctx.fillRect(ufo.x + 8 + i*12, ufo.y + ufo.h - 4, 4, 3);
@@ -625,7 +619,6 @@ function drawBullet(b, color) {
   ctx.shadowBlur = 12;
   ctx.shadowColor = color;
   ctx.fillRect(b.x, b.y, b.w, b.h);
-  // Trail
   ctx.globalAlpha = 0.4;
   ctx.fillRect(b.x, b.y + b.h, b.w, 6);
   ctx.globalAlpha = 1;
@@ -649,7 +642,6 @@ function drawPowerup(p) {
 function drawShields() {
   shields.forEach(s => {
     s.blocks.forEach(b => {
-      const alpha = b.hp / 3;
       ctx.fillStyle = b.hp === 3 ? '#0f0' : b.hp === 2 ? '#ff0' : '#f80';
       ctx.shadowBlur = 5;
       ctx.shadowColor = ctx.fillStyle;
@@ -697,7 +689,6 @@ function detonateBomb() {
 }
 
 function update() {
-  // Stars
   stars.forEach(s => {
     s.y += s.speed;
     if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
@@ -708,7 +699,6 @@ function update() {
 
   if (!state.running) return;
 
-  // Combo decay
   if (state.comboTimer > 0) {
     state.comboTimer--;
     if (state.comboTimer === 0 && state.combo > 1) {
@@ -717,14 +707,12 @@ function update() {
     }
   }
 
-  // Player movement
   if (keys['ArrowLeft'] || keys['left']) player.x -= player.speed;
   if (keys['ArrowRight'] || keys['right']) player.x += player.speed;
   player.x = Math.max(0, Math.min(W - player.w, player.x));
   if (player.invuln > 0) player.invuln--;
   if (player.cooldown > 0) player.cooldown--;
 
-  // Power timer
   if (player.power) {
     player.powerTime--;
     if (player.powerTime <= 0) {
@@ -733,20 +721,17 @@ function update() {
     }
   }
 
-  // AUTO-FIRE
   const cd = player.power === 'RAPID' ? 7 : player.baseCooldown;
   if (player.cooldown <= 0) {
     shoot();
     player.cooldown = cd;
   }
 
-  // Bullets
   bullets.forEach(b => { b.y -= b.speed; if (b.vx) b.x += b.vx; });
   bullets = bullets.filter(b => b.y > -20 && b.x > -20 && b.x < W + 20);
   enemyBullets.forEach(b => { b.y += b.speed; });
   enemyBullets = enemyBullets.filter(b => b.y < H + 20);
 
-  // Enemies move
   const aliveCount = enemies.filter(e => e.alive).length;
   const speedFactor = Math.max(6, 35 - state.level * 2 - (45 - aliveCount));
   enemyMoveTimer++;
@@ -766,7 +751,6 @@ function update() {
     }
   }
 
-  // Enemy shoot
   enemyShootTimer++;
   if (enemyShootTimer >= Math.max(20, 70 - state.level * 4)) {
     enemyShootTimer = 0;
@@ -787,7 +771,6 @@ function update() {
     }
   }
 
-  // UFO
   ufoTimer--;
   if (ufoTimer <= 0 && !ufo) {
     const dir = Math.random() < 0.5 ? 1 : -1;
@@ -805,11 +788,9 @@ function update() {
     if (ufo.x < -100 || ufo.x > W + 100) ufo = null;
   }
 
-  // Powerups falling
   powerups.forEach(p => p.y += p.vy);
   powerups = powerups.filter(p => p.y < H + 20);
 
-  // Bullet -> Enemy
   bullets.forEach(b => {
     enemies.forEach(e => {
       if (e.alive && b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
@@ -824,7 +805,6 @@ function update() {
           spawnParticles(e.x + e.w/2, e.y + e.h/2, ['#f0f','#ff0','#0f0','#f80'][e.type]);
           spawnFloatText(e.x + e.w/2, e.y, `+${points}`, '#ff0');
           playSound('explosion');
-          // Drop powerup
           if (Math.random() < 0.12) spawnPowerup(e.x + e.w/2, e.y);
           updateHUD();
         } else {
@@ -832,13 +812,11 @@ function update() {
         }
       }
     });
-    // Bullet -> UFO
     if (ufo && b.x < ufo.x + ufo.w && b.x + b.w > ufo.x && b.y < ufo.y + ufo.h && b.y + b.h > ufo.y) {
       const points = 200 * state.combo;
       state.score += points;
       spawnParticles(ufo.x + ufo.w/2, ufo.y + ufo.h/2, '#f0f', 30, 8);
       spawnFloatText(ufo.x + ufo.w/2, ufo.y, `+${points}`, '#f0f');
-      // Guaranteed powerup
       spawnPowerup(ufo.x + ufo.w/2, ufo.y);
       ufo = null;
       b.y = -100;
@@ -846,7 +824,6 @@ function update() {
       shake(5);
       updateHUD();
     }
-    // Bullet -> Shield
     shields.forEach(s => {
       s.blocks.forEach(blk => {
         if (blk.hp > 0 && b.x < blk.x + blk.w && b.x + b.w > blk.x && b.y < blk.y + blk.h && b.y + b.h > blk.y) {
@@ -858,7 +835,6 @@ function update() {
     });
   });
 
-  // Enemy bullet -> Player
   enemyBullets.forEach(b => {
     if (player.invuln <= 0 && b.x < player.x + player.w && b.x + b.w > player.x && b.y < player.y + player.h && b.y + b.h > player.y) {
       b.y = H + 100;
@@ -878,7 +854,6 @@ function update() {
       }
       updateHUD();
     }
-    // Enemy bullet -> Shield
     shields.forEach(s => {
       s.blocks.forEach(blk => {
         if (blk.hp > 0 && b.x < blk.x + blk.w && b.x + b.w > blk.x && b.y < blk.y + blk.h && b.y + b.h > blk.y) {
@@ -889,7 +864,6 @@ function update() {
     });
   });
 
-  // Powerup pickup
   powerups.forEach(p => {
     if (p.y + p.h > player.y && p.x < player.x + player.w && p.x + p.w > player.x && p.y < player.y + player.h) {
       const info = POWERUPS[p.type];
@@ -897,17 +871,13 @@ function update() {
         state.lives++;
         playSound('extralife');
         spawnFloatText(player.x + player.w/2, player.y, '+1 VIE', '#f0f');
-      } else if (p.type === 'BOMB') {
-        state.bombs++;
-        playSound('powerup');
-        spawnFloatText(player.x + player.w/2, player.y, '+1 BOMBE', '#f50');
       } else if (p.type === 'SHIELD') {
         player.shieldHits = 3;
         playSound('powerup');
         spawnFloatText(player.x + player.w/2, player.y, 'BOUCLIER', '#0af');
       } else {
         player.power = p.type;
-        player.powerTime = 600; // 10s
+        player.powerTime = 600;
         playSound('powerup');
         spawnFloatText(player.x + player.w/2, player.y, info.name, info.color);
       }
@@ -918,12 +888,10 @@ function update() {
   });
   powerups = powerups.filter(p => p.y < H + 20);
 
-  // Enemy reaches player line
   enemies.forEach(e => {
     if (e.alive && e.y + e.h >= player.y) gameOver();
   });
 
-  // Particles
   particles = particles.filter(p => {
     p.x += p.vx; p.y += p.vy;
     p.vx *= 0.95; p.vy *= 0.95;
@@ -931,14 +899,12 @@ function update() {
     return p.life > 0;
   });
 
-  // Float texts
   floatTexts.forEach(f => { f.y += f.vy; f.life--; });
   floatTexts = floatTexts.filter(f => f.life > 0);
 
-  // Level complete
   if (enemies.every(e => !e.alive)) {
     state.level++;
-    state.score += 100 * state.level; // level bonus
+    state.score += 100 * state.level;
     spawnFloatText(W/2, H/2, `NIVEAU ${state.level}!`, '#0ff');
     playSound('levelup');
     updateHUD();
@@ -953,13 +919,11 @@ function render() {
   }
   ctx.clearRect(0, 0, W, H);
 
-  // Stars
   stars.forEach(s => {
     ctx.fillStyle = `rgba(255,255,255,${s.s/2.5})`;
     ctx.fillRect(s.x, s.y, s.s, s.s);
   });
 
-  // Shields
   if (shields) drawShields();
 
   if (state.running || overlay.classList.contains('hidden')) {
@@ -989,7 +953,6 @@ function render() {
       ctx.shadowBlur = 0;
     });
 
-    // Combo display
     if (state.combo > 1) {
       ctx.fillStyle = '#ff0';
       ctx.font = 'bold 20px Courier New';
@@ -1022,7 +985,6 @@ function showStartScreen() {
       <span style="color:#ff0">R = TIR RAPIDE</span>
       <span style="color:#0f0">T = TRIPLE TIR</span>
       <span style="color:#0af">S = BOUCLIER</span>
-      <span style="color:#f50">B = BOMBE</span>
       <span style="color:#f0f">♥ = VIE EXTRA</span>
     </div>
     <p class="controls">🖥️ ← → bouger | B = bombe | P = pause</p>
@@ -1127,20 +1089,36 @@ document.addEventListener('keyup', e => { keys[e.key] = false; });
 const leftBtn = document.getElementById('leftBtn');
 const rightBtn = document.getElementById('rightBtn');
 const bombBtn = document.getElementById('bombBtn');
+
+// FIX : fonction bindBtn corrigée (le retour à la ligne dans preventDefault cassait tout)
 function bindBtn(btn, key) {
-  ['touchstart','mousedown'].forEach(ev => btn.addEventListener(ev, e => { e.preventD
-efault(); initAudio(); keys[key] = true; }));
-  ['touchend','mouseup','mouseleave','touchcancel'].forEach(ev => btn.addEventListener(ev, e => { e.preventDefault(); keys[key] = false; }));
+  const start = (e) => {
+    e.preventDefault();
+    initAudio();
+    keys[key] = true;
+  };
+  const end = (e) => {
+    e.preventDefault();
+    keys[key] = false;
+  };
+  btn.addEventListener('touchstart', start, { passive: false });
+  btn.addEventListener('mousedown', start);
+  btn.addEventListener('touchend', end, { passive: false });
+  btn.addEventListener('touchcancel', end, { passive: false });
+  btn.addEventListener('mouseup', end);
+  btn.addEventListener('mouseleave', end);
 }
 bindBtn(leftBtn, 'left');
 bindBtn(rightBtn, 'right');
 
 // Bomb button (single tap)
-['touchstart','mousedown'].forEach(ev => bombBtn.addEventListener(ev, e => {
+const bombStart = (e) => {
   e.preventDefault();
   initAudio();
   detonateBomb();
-}));
+};
+bombBtn.addEventListener('touchstart', bombStart, { passive: false });
+bombBtn.addEventListener('mousedown', bombStart);
 
 soundToggleBtn.addEventListener('click', () => {
   soundEnabled = !soundEnabled;
@@ -1148,7 +1126,6 @@ soundToggleBtn.addEventListener('click', () => {
   if (soundEnabled) initAudio();
 });
 
-// Responsive canvas
 function resizeCanvas() {
   const container = document.getElementById('gameContainer');
   const maxW = Math.min(window.innerWidth - 20, 700);
