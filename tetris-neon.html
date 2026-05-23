@@ -2,21 +2,27 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>NEON TETRIS</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
   
   body {
     font-family: 'Courier New', monospace;
     background: #0a0014;
     color: #fff;
     min-height: 100vh;
-    overflow-x: hidden;
     background-image: 
       radial-gradient(circle at 20% 50%, rgba(255, 0, 255, 0.15) 0%, transparent 50%),
       radial-gradient(circle at 80% 80%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
       radial-gradient(circle at 50% 20%, rgba(255, 255, 0, 0.1) 0%, transparent 50%);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
   .grid-bg {
@@ -31,11 +37,13 @@
   }
 
   .container {
-    min-height: 100vh;
+    height: 100vh;
+    height: 100dvh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 20px;
+    padding: 10px;
+    overflow-y: auto;
   }
 
   .screen {
@@ -49,7 +57,7 @@
   }
 
   .neon-title {
-    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-size: clamp(2rem, 8vw, 5rem);
     font-weight: bold;
     text-align: center;
     letter-spacing: 0.3em;
@@ -69,8 +77,8 @@
     color: #00ffff;
     text-shadow: 0 0 10px #00ffff;
     letter-spacing: 0.5em;
-    margin-bottom: 40px;
-    font-size: 1rem;
+    margin-bottom: 30px;
+    font-size: 0.9rem;
   }
 
   @keyframes flicker {
@@ -85,34 +93,33 @@
   .menu {
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: 15px;
     align-items: center;
-    margin-top: 30px;
+    margin-top: 20px;
   }
 
   .neon-btn {
     background: transparent;
     border: 2px solid #ff00ff;
     color: #ff00ff;
-    padding: 15px 50px;
+    padding: 14px 40px;
     font-family: inherit;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: bold;
     letter-spacing: 0.2em;
     cursor: pointer;
     text-transform: uppercase;
     transition: all 0.3s;
-    min-width: 280px;
+    min-width: 260px;
     text-shadow: 0 0 10px #ff00ff;
     box-shadow: 0 0 20px rgba(255, 0, 255, 0.5), inset 0 0 20px rgba(255, 0, 255, 0.1);
   }
 
-  .neon-btn:hover {
+  .neon-btn:hover, .neon-btn:active {
     background: #ff00ff;
     color: #0a0014;
     text-shadow: none;
     box-shadow: 0 0 40px #ff00ff, inset 0 0 20px rgba(255, 255, 255, 0.3);
-    transform: scale(1.05);
   }
 
   .neon-btn.cyan {
@@ -121,8 +128,7 @@
     text-shadow: 0 0 10px #00ffff;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.1);
   }
-
-  .neon-btn.cyan:hover {
+  .neon-btn.cyan:hover, .neon-btn.cyan:active {
     background: #00ffff;
     color: #0a0014;
     box-shadow: 0 0 40px #00ffff, inset 0 0 20px rgba(255, 255, 255, 0.3);
@@ -134,8 +140,7 @@
     text-shadow: 0 0 10px #ffff00;
     box-shadow: 0 0 20px rgba(255, 255, 0, 0.5), inset 0 0 20px rgba(255, 255, 0, 0.1);
   }
-
-  .neon-btn.yellow:hover {
+  .neon-btn.yellow:hover, .neon-btn.yellow:active {
     background: #ffff00;
     color: #0a0014;
     box-shadow: 0 0 40px #ffff00;
@@ -147,45 +152,45 @@
     text-shadow: 0 0 10px #00ff88;
     box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
   }
-
-  .neon-btn.green:hover {
+  .neon-btn.green:hover, .neon-btn.green:active {
     background: #00ff88;
     color: #0a0014;
     box-shadow: 0 0 40px #00ff88;
   }
 
   .neon-btn.small {
-    padding: 8px 20px;
-    font-size: 0.9rem;
+    padding: 8px 18px;
+    font-size: 0.85rem;
     min-width: auto;
   }
 
   .screen-title {
     text-align: center;
-    font-size: 2.5rem;
+    font-size: clamp(1.4rem, 5vw, 2.5rem);
     color: #00ffff;
     text-shadow: 0 0 20px #00ffff;
     letter-spacing: 0.2em;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
 
-  /* GAME */
+  /* GAME SCREEN - desktop layout */
   .game-screen {
     display: none;
   }
   .game-screen.active {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 15px;
     justify-content: center;
     align-items: flex-start;
+    width: 100%;
   }
 
   .game-board-wrapper {
     border: 3px solid #ff00ff;
     box-shadow: 0 0 30px #ff00ff, inset 0 0 30px rgba(255, 0, 255, 0.2);
     background: rgba(0, 0, 0, 0.8);
-    padding: 5px;
+    padding: 4px;
     position: relative;
   }
 
@@ -197,13 +202,13 @@
   .game-overlay {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     flex-direction: column;
     gap: 20px;
     display: none;
+    z-index: 10;
   }
 
   .game-overlay.show {
@@ -220,15 +225,15 @@
   .side-panel {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    min-width: 200px;
+    gap: 12px;
+    min-width: 180px;
   }
 
   .info-box {
     border: 2px solid #00ffff;
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(0, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.6);
-    padding: 15px;
+    padding: 12px;
     text-align: center;
   }
 
@@ -236,14 +241,14 @@
     color: #00ffff;
     text-shadow: 0 0 10px #00ffff;
     letter-spacing: 0.2em;
-    font-size: 0.9rem;
-    margin-bottom: 8px;
+    font-size: 0.85rem;
+    margin-bottom: 6px;
   }
 
   .info-box .value {
     color: #fff;
     text-shadow: 0 0 10px #fff;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: bold;
   }
 
@@ -258,14 +263,14 @@
     border: 2px solid #ffff00;
     box-shadow: 0 0 15px rgba(255, 255, 0, 0.3);
     background: rgba(0, 0, 0, 0.6);
-    padding: 15px;
-    font-size: 0.85rem;
+    padding: 12px;
+    font-size: 0.8rem;
     color: #ffff00;
   }
 
   .controls-info h3 {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     letter-spacing: 0.2em;
     text-shadow: 0 0 10px #ffff00;
   }
@@ -273,57 +278,53 @@
   .controls-info div {
     display: flex;
     justify-content: space-between;
-    margin: 4px 0;
+    margin: 3px 0;
   }
 
   /* DIFFICULTY */
   .difficulty-card {
     border: 2px solid;
     background: rgba(0, 0, 0, 0.6);
-    padding: 25px;
+    padding: 20px;
     cursor: pointer;
     transition: all 0.3s;
     text-align: center;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
   }
 
   .difficulty-card.easy {
     border-color: #00ff88;
     box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
   }
-  .difficulty-card.easy:hover {
+  .difficulty-card.easy:hover, .difficulty-card.easy:active {
     box-shadow: 0 0 40px #00ff88;
-    transform: scale(1.02);
   }
   .difficulty-card.medium {
     border-color: #ffff00;
     box-shadow: 0 0 20px rgba(255, 255, 0, 0.3);
   }
-  .difficulty-card.medium:hover {
+  .difficulty-card.medium:hover, .difficulty-card.medium:active {
     box-shadow: 0 0 40px #ffff00;
-    transform: scale(1.02);
   }
   .difficulty-card.hard {
     border-color: #ff00ff;
     box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
   }
-  .difficulty-card.hard:hover {
+  .difficulty-card.hard:hover, .difficulty-card.hard:active {
     box-shadow: 0 0 40px #ff00ff;
-    transform: scale(1.02);
   }
   .difficulty-card.insane {
     border-color: #ff0044;
     box-shadow: 0 0 20px rgba(255, 0, 68, 0.3);
   }
-  .difficulty-card.insane:hover {
+  .difficulty-card.insane:hover, .difficulty-card.insane:active {
     box-shadow: 0 0 40px #ff0044;
-    transform: scale(1.02);
   }
 
   .difficulty-card h2 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     letter-spacing: 0.3em;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
   .difficulty-card.easy h2 { color: #00ff88; text-shadow: 0 0 15px #00ff88; }
   .difficulty-card.medium h2 { color: #ffff00; text-shadow: 0 0 15px #ffff00; }
@@ -332,7 +333,7 @@
 
   .difficulty-card p {
     color: #aaa;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
   /* SCORES */
@@ -340,34 +341,30 @@
     border: 2px solid #00ffff;
     box-shadow: 0 0 30px #00ffff, inset 0 0 20px rgba(0, 255, 255, 0.1);
     background: rgba(0, 0, 0, 0.7);
-    padding: 25px;
+    padding: 20px;
+    overflow-x: auto;
   }
 
   .scoreboard table {
     width: 100%;
     border-collapse: collapse;
+    font-size: 0.85rem;
   }
 
   .scoreboard th {
     color: #ff00ff;
     text-shadow: 0 0 10px #ff00ff;
-    padding: 12px 8px;
-    letter-spacing: 0.2em;
+    padding: 10px 6px;
+    letter-spacing: 0.15em;
     border-bottom: 2px solid #ff00ff;
-    font-size: 0.9rem;
+    font-size: 0.8rem;
   }
 
   .scoreboard td {
-    padding: 10px 8px;
+    padding: 8px 6px;
     text-align: center;
     border-bottom: 1px solid rgba(0, 255, 255, 0.2);
     color: #fff;
-  }
-
-  .scoreboard tr:hover td {
-    background: rgba(255, 0, 255, 0.1);
-    color: #00ffff;
-    text-shadow: 0 0 8px #00ffff;
   }
 
   .rank-1 { color: #ffff00 !important; text-shadow: 0 0 10px #ffff00; font-weight: bold; }
@@ -376,7 +373,7 @@
 
   .empty-scores {
     text-align: center;
-    padding: 40px;
+    padding: 30px;
     color: #aaa;
     font-style: italic;
   }
@@ -385,73 +382,32 @@
     background: rgba(0, 0, 0, 0.8);
     border: 2px solid #00ffff;
     color: #00ffff;
-    padding: 12px 20px;
+    padding: 10px 15px;
     font-family: inherit;
-    font-size: 1.1rem;
+    font-size: 1rem;
     text-align: center;
     letter-spacing: 0.2em;
     box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
     outline: none;
     text-transform: uppercase;
-  }
-
-  .input-name:focus {
-    box-shadow: 0 0 25px #00ffff;
+    width: 80%;
+    max-width: 250px;
   }
 
   .back-btn {
-    margin-top: 30px;
+    margin-top: 20px;
     text-align: center;
-  }
-
-  .mobile-controls {
-    display: none;
-    width: 100%;
-    margin-top: 15px;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .mobile-controls .row {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     justify-content: center;
-  }
-
-  .mc-btn {
-    flex: 1;
-    max-width: 80px;
-    padding: 15px;
-    font-size: 1.5rem;
-    background: rgba(0,0,0,0.6);
-    border: 2px solid #ff00ff;
-    color: #ff00ff;
-    text-shadow: 0 0 10px #ff00ff;
-    box-shadow: 0 0 10px rgba(255, 0, 255, 0.4);
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-  }
-
-  .mc-btn:active {
-    background: #ff00ff;
-    color: #000;
-  }
-
-  @media (max-width: 768px) {
-    .mobile-controls { display: flex; }
-    .controls-info { display: none; }
-    .neon-title { letter-spacing: 0.15em; }
-    .side-panel { flex-direction: row; flex-wrap: wrap; min-width: auto; width: 100%; justify-content: center; }
-    .info-box { flex: 1; min-width: 100px; }
+    flex-wrap: wrap;
   }
 
   .filter-tabs {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     justify-content: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     flex-wrap: wrap;
   }
 
@@ -459,11 +415,11 @@
     background: transparent;
     border: 1px solid #00ffff;
     color: #00ffff;
-    padding: 8px 18px;
+    padding: 6px 14px;
     font-family: inherit;
     cursor: pointer;
     letter-spacing: 0.1em;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     transition: all 0.3s;
   }
 
@@ -471,6 +427,248 @@
     background: #00ffff;
     color: #0a0014;
     box-shadow: 0 0 15px #00ffff;
+  }
+
+  /* ============================ */
+  /* MOBILE LAYOUT - REDESIGNED */
+  /* ============================ */
+  
+  .mobile-game-layout {
+    display: none;
+  }
+
+  @media (max-width: 768px), (max-height: 800px) and (orientation: portrait) {
+    .container {
+      padding: 5px;
+      align-items: flex-start;
+    }
+
+    /* Hide desktop game layout on mobile */
+    .game-screen.active .desktop-only {
+      display: none;
+    }
+
+    .game-screen.active {
+      flex-direction: column;
+      gap: 8px;
+      padding: 5px;
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .mobile-game-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      width: 100%;
+      align-items: center;
+    }
+
+    /* Top bar with score info */
+    .mobile-topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 5px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .mobile-info {
+      flex: 1;
+      border: 1.5px solid #00ffff;
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+      background: rgba(0, 0, 0, 0.6);
+      padding: 5px 4px;
+      text-align: center;
+    }
+
+    .mobile-info h3 {
+      color: #00ffff;
+      text-shadow: 0 0 8px #00ffff;
+      letter-spacing: 0.1em;
+      font-size: 0.6rem;
+      margin-bottom: 2px;
+    }
+
+    .mobile-info .value {
+      color: #fff;
+      text-shadow: 0 0 8px #fff;
+      font-size: 0.95rem;
+      font-weight: bold;
+    }
+
+    /* Middle section: hold | board | next */
+    .mobile-middle {
+      display: flex;
+      gap: 4px;
+      width: 100%;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .mobile-side {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .mobile-side .info-box {
+      padding: 5px;
+      border-width: 1.5px;
+    }
+
+    .mobile-side .info-box h3 {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      margin-bottom: 3px;
+    }
+
+    .mobile-side canvas {
+      width: 56px !important;
+      height: 56px !important;
+    }
+
+    .mobile-side .pause-btn {
+      padding: 6px 4px;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      min-width: auto;
+      width: 100%;
+    }
+
+    .game-board-wrapper {
+      padding: 2px;
+      border-width: 2px;
+    }
+
+    /* Mobile controls */
+    .mobile-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      width: 100%;
+      max-width: 400px;
+      margin-top: 5px;
+    }
+
+    .mobile-controls .row {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+    }
+
+    .mc-btn {
+      flex: 1;
+      padding: 14px 5px;
+      font-size: 1.4rem;
+      background: rgba(0,0,0,0.6);
+      border: 2px solid #ff00ff;
+      color: #ff00ff;
+      text-shadow: 0 0 8px #ff00ff;
+      box-shadow: 0 0 8px rgba(255, 0, 255, 0.4);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      font-weight: bold;
+      font-family: inherit;
+    }
+
+    .mc-btn.rotate {
+      border-color: #00ffff;
+      color: #00ffff;
+      text-shadow: 0 0 8px #00ffff;
+      box-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+    }
+
+    .mc-btn.drop {
+      border-color: #ffff00;
+      color: #ffff00;
+      text-shadow: 0 0 8px #ffff00;
+      box-shadow: 0 0 8px rgba(255, 255, 0, 0.4);
+    }
+
+    .mc-btn.hold {
+      border-color: #00ff88;
+      color: #00ff88;
+      text-shadow: 0 0 8px #00ff88;
+      box-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+    }
+
+    .mc-btn:active {
+      background: currentColor;
+      filter: brightness(1.5);
+    }
+
+    .mc-btn.rotate:active { background: #00ffff; color: #000; }
+    .mc-btn:active { background: #ff00ff; color: #000; }
+    .mc-btn.drop:active { background: #ffff00; color: #000; }
+    .mc-btn.hold:active { background: #00ff88; color: #000; }
+
+    .neon-btn {
+      min-width: 220px;
+      padding: 12px 30px;
+      font-size: 1rem;
+    }
+
+    .menu {
+      gap: 12px;
+    }
+
+    .scoreboard {
+      padding: 12px 8px;
+    }
+
+    .scoreboard table {
+      font-size: 0.7rem;
+    }
+
+    .scoreboard th, .scoreboard td {
+      padding: 6px 3px;
+    }
+
+    .difficulty-card {
+      padding: 15px;
+    }
+
+    .difficulty-card h2 {
+      font-size: 1.3rem;
+    }
+  }
+
+  /* Very small screens */
+  @media (max-width: 380px) {
+    .mobile-side canvas {
+      width: 48px !important;
+      height: 48px !important;
+    }
+    
+    .mc-btn {
+      padding: 12px 3px;
+      font-size: 1.2rem;
+    }
+    
+    .mobile-info .value {
+      font-size: 0.85rem;
+    }
+  }
+
+  /* Hide elements based on layout */
+  .desktop-game-layout {
+    display: contents;
+  }
+
+  @media (max-width: 768px) {
+    .desktop-game-layout {
+      display: none;
+    }
+  }
+
+  @media (min-width: 769px) {
+    .mobile-game-layout {
+      display: none !important;
+    }
   }
 </style>
 </head>
@@ -494,7 +692,7 @@
 
   <!-- DIFFICULTÉ -->
   <div id="difficulty-screen" class="screen">
-    <h1 class="screen-title">CHOISIR LA DIFFICULTÉ</h1>
+    <h1 class="screen-title">DIFFICULTÉ</h1>
     <div class="difficulty-card easy" onclick="startGame('easy')">
       <h2>FACILE</h2>
       <p>Vitesse lente • Idéal pour débuter</p>
@@ -530,6 +728,7 @@
         <tr><td>C / SHIFT</td><td>Garder pièce (Hold)</td></tr>
         <tr><td>P</td><td>Pause</td></tr>
       </table>
+      <p style="text-align:center; color:#00ffff; margin-top: 15px; font-size: 0.85rem;">📱 Sur mobile: utilisez les boutons tactiles</p>
     </div>
     <div class="back-btn">
       <button class="neon-btn cyan small" onclick="showScreen('menu-screen')">◀ RETOUR</button>
@@ -543,7 +742,7 @@
       <button class="filter-tab active" data-filter="all" onclick="filterScores('all')">TOUS</button>
       <button class="filter-tab" data-filter="easy" onclick="filterScores('easy')">FACILE</button>
       <button class="filter-tab" data-filter="medium" onclick="filterScores('medium')">NORMAL</button>
-      <button class="filter-tab" data-filter="hard" onclick="filterScores('hard')">DIFFICILE</button>
+      <button class="filter-tab" data-filter="hard" onclick="filterScores('hard')">DIFF.</button>
       <button class="filter-tab" data-filter="insane" onclick="filterScores('insane')">INSANE</button>
     </div>
     <div class="scoreboard">
@@ -553,16 +752,16 @@
             <th>RANG</th>
             <th>JOUEUR</th>
             <th>SCORE</th>
-            <th>NIVEAU</th>
+            <th>NIV.</th>
             <th>LIGNES</th>
-            <th>DIFFICULTÉ</th>
+            <th>DIFF.</th>
           </tr>
         </thead>
         <tbody id="scoresBody"></tbody>
       </table>
     </div>
     <div class="back-btn">
-      <button class="neon-btn cyan small" onclick="showScreen('menu-screen')">◀ RETOUR</button>
+      <button class="neon-btn cyan small" onclick="showScreen('menu-screen')">◀ MENU</button>
       <button class="neon-btn yellow small" onclick="clearScores()">🗑 EFFACER</button>
     </div>
   </div>
@@ -570,30 +769,30 @@
   <!-- GAME OVER -->
   <div id="gameover-screen" class="screen">
     <h1 class="neon-title" style="color:#fff; text-shadow: 0 0 5px #fff, 0 0 20px #ff0044, 0 0 40px #ff0044;">GAME OVER</h1>
-    <div class="scoreboard" style="margin-top: 20px;">
-      <div style="text-align:center; margin-bottom: 20px;">
-        <div style="color:#00ffff; letter-spacing: 0.3em; margin-bottom: 5px;">SCORE FINAL</div>
-        <div id="finalScore" style="font-size: 3rem; color:#fff; text-shadow: 0 0 20px #ff00ff;">0</div>
+    <div class="scoreboard" style="margin-top: 15px;">
+      <div style="text-align:center; margin-bottom: 15px;">
+        <div style="color:#00ffff; letter-spacing: 0.3em; margin-bottom: 5px; font-size: 0.85rem;">SCORE FINAL</div>
+        <div id="finalScore" style="font-size: 2.5rem; color:#fff; text-shadow: 0 0 20px #ff00ff;">0</div>
       </div>
-      <div style="display:flex; justify-content: space-around; flex-wrap:wrap; gap:15px; margin-bottom: 25px;">
+      <div style="display:flex; justify-content: space-around; flex-wrap:wrap; gap:10px; margin-bottom: 20px;">
         <div style="text-align:center;">
-          <div style="color:#ffff00; font-size: 0.8rem;">NIVEAU</div>
-          <div id="finalLevel" style="font-size: 1.5rem; color:#fff;">1</div>
+          <div style="color:#ffff00; font-size: 0.75rem;">NIVEAU</div>
+          <div id="finalLevel" style="font-size: 1.3rem; color:#fff;">1</div>
         </div>
         <div style="text-align:center;">
-          <div style="color:#ffff00; font-size: 0.8rem;">LIGNES</div>
-          <div id="finalLines" style="font-size: 1.5rem; color:#fff;">0</div>
+          <div style="color:#ffff00; font-size: 0.75rem;">LIGNES</div>
+          <div id="finalLines" style="font-size: 1.3rem; color:#fff;">0</div>
         </div>
         <div style="text-align:center;">
-          <div style="color:#ffff00; font-size: 0.8rem;">DIFFICULTÉ</div>
-          <div id="finalDiff" style="font-size: 1.5rem; color:#fff;">-</div>
+          <div style="color:#ffff00; font-size: 0.75rem;">DIFFICULTÉ</div>
+          <div id="finalDiff" style="font-size: 1.3rem; color:#fff;">-</div>
         </div>
       </div>
       <div style="text-align:center;">
-        <div style="margin-bottom: 15px; color:#00ffff;">ENTREZ VOTRE NOM:</div>
+        <div style="margin-bottom: 12px; color:#00ffff; font-size: 0.9rem;">ENTREZ VOTRE NOM:</div>
         <input type="text" id="playerName" class="input-name" maxlength="10" placeholder="JOUEUR">
-        <div style="margin-top: 20px; display:flex; gap: 10px; justify-content: center; flex-wrap:wrap;">
-          <button class="neon-btn green small" onclick="saveScore()">💾 SAUVEGARDER</button>
+        <div style="margin-top: 18px; display:flex; gap: 8px; justify-content: center; flex-wrap:wrap;">
+          <button class="neon-btn green small" onclick="saveScore()">💾 SAUVER</button>
           <button class="neon-btn cyan small" onclick="showScreen('menu-screen')">🏠 MENU</button>
         </div>
       </div>
@@ -602,63 +801,111 @@
 
   <!-- GAME -->
   <div id="game-screen" class="game-screen">
-    <div class="side-panel">
-      <div class="info-box">
-        <h3>SCORE</h3>
-        <div class="value" id="scoreVal">0</div>
+    
+    <!-- DESKTOP LAYOUT -->
+    <div class="desktop-game-layout">
+      <div class="side-panel">
+        <div class="info-box">
+          <h3>SCORE</h3>
+          <div class="value" id="scoreValD">0</div>
+        </div>
+        <div class="info-box">
+          <h3>NIVEAU</h3>
+          <div class="value" id="levelValD">1</div>
+        </div>
+        <div class="info-box">
+          <h3>LIGNES</h3>
+          <div class="value" id="linesValD">0</div>
+        </div>
+        <div class="info-box">
+          <h3>HOLD</h3>
+          <canvas id="holdCanvasD" width="100" height="100"></canvas>
+        </div>
       </div>
-      <div class="info-box">
-        <h3>NIVEAU</h3>
-        <div class="value" id="levelVal">1</div>
+
+      <div class="game-board-wrapper">
+        <canvas id="gameCanvas" width="300" height="600"></canvas>
+        <div id="pauseOverlay" class="game-overlay">
+          <h2>PAUSE</h2>
+          <button class="neon-btn cyan small" onclick="togglePause()">▶ REPRENDRE</button>
+          <button class="neon-btn small" onclick="quitGame()">🏠 MENU</button>
+        </div>
       </div>
-      <div class="info-box">
-        <h3>LIGNES</h3>
-        <div class="value" id="linesVal">0</div>
-      </div>
-      <div class="info-box">
-        <h3>HOLD</h3>
-        <canvas id="holdCanvas" width="100" height="100"></canvas>
+
+      <div class="side-panel">
+        <div class="info-box">
+          <h3>SUIVANT</h3>
+          <canvas id="nextCanvasD" width="100" height="100"></canvas>
+        </div>
+        <div class="controls-info">
+          <h3>CONTRÔLES</h3>
+          <div><span>←→</span><span>Déplacer</span></div>
+          <div><span>↓</span><span>Descendre</span></div>
+          <div><span>↑</span><span>Rotation</span></div>
+          <div><span>ESPACE</span><span>Chute</span></div>
+          <div><span>C</span><span>Hold</span></div>
+          <div><span>P</span><span>Pause</span></div>
+        </div>
+        <button class="neon-btn small" onclick="togglePause()">⏸ PAUSE</button>
+        <button class="neon-btn cyan small" onclick="quitGame()">🏠 QUITTER</button>
       </div>
     </div>
 
-    <div class="game-board-wrapper">
-      <canvas id="gameCanvas" width="300" height="600"></canvas>
-      <div id="pauseOverlay" class="game-overlay">
-        <h2>PAUSE</h2>
-        <button class="neon-btn cyan small" onclick="togglePause()">▶ REPRENDRE</button>
-        <button class="neon-btn small" onclick="quitGame()">🏠 MENU</button>
+    <!-- MOBILE LAYOUT -->
+    <div class="mobile-game-layout">
+      <!-- Top score bar -->
+      <div class="mobile-topbar">
+        <div class="mobile-info">
+          <h3>SCORE</h3>
+          <div class="value" id="scoreValM">0</div>
+        </div>
+        <div class="mobile-info">
+          <h3>NIV.</h3>
+          <div class="value" id="levelValM">1</div>
+        </div>
+        <div class="mobile-info">
+          <h3>LIGNES</h3>
+          <div class="value" id="linesValM">0</div>
+        </div>
       </div>
-    </div>
 
-    <div class="side-panel">
-      <div class="info-box">
-        <h3>SUIVANT</h3>
-        <canvas id="nextCanvas" width="100" height="100"></canvas>
-      </div>
-      <div class="controls-info">
-        <h3>CONTRÔLES</h3>
-        <div><span>←→</span><span>Déplacer</span></div>
-        <div><span>↓</span><span>Descendre</span></div>
-        <div><span>↑</span><span>Rotation</span></div>
-        <div><span>ESPACE</span><span>Chute</span></div>
-        <div><span>C</span><span>Hold</span></div>
-        <div><span>P</span><span>Pause</span></div>
-      </div>
-      <button class="neon-btn small" onclick="togglePause()">⏸ PAUSE</button>
-      <button class="neon-btn cyan small" onclick="quitGame()">🏠 QUITTER</button>
+      <!-- Middle: Hold | Board | Next -->
+      <div class="mobile-middle">
+        <div class="mobile-side">
+          <div class="info-box">
+            <h3>HOLD</h3>
+            <canvas id="holdCanvasM" width="56" height="56"></canvas>
+          </div>
+          <button class="neon-btn pause-btn" onclick="togglePause()">⏸</button>
+        </div>
 
+        <div class="game-board-wrapper" id="mobileBoardWrapper">
+          <!-- Canvas will be moved here for mobile -->
+        </div>
+
+        <div class="mobile-side">
+          <div class="info-box">
+            <h3>NEXT</h3>
+            <canvas id="nextCanvasM" width="56" height="56"></canvas>
+          </div>
+          <button class="neon-btn cyan pause-btn" onclick="quitGame()">🏠</button>
+        </div>
+      </div>
+
+      <!-- Touch controls -->
       <div class="mobile-controls">
         <div class="row">
-          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('rotate')" onclick="mobileAction('rotate')">⟳</button>
+          <button class="mc-btn rotate" ontouchstart="event.preventDefault();mobileAction('rotate')">⟳</button>
+          <button class="mc-btn hold" ontouchstart="event.preventDefault();mobileAction('hold')">HOLD</button>
+          <button class="mc-btn drop" ontouchstart="event.preventDefault();mobileAction('drop')">⤓</button>
         </div>
         <div class="row">
-          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('left')" onclick="mobileAction('left')">←</button>
-          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('down')" onclick="mobileAction('down')">↓</button>
-          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('right')" onclick="mobileAction('right')">→</button>
-        </div>
-        <div class="row">
-          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('drop')" onclick="mobileAction('drop')">⤓</button>
-          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('hold')" onclick="mobileAction('hold')">H</button>
+          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('left')" 
+                  ontouchend="event.preventDefault();stopRepeat()">←</button>
+          <button class="mc-btn" ontouchstart="event.preventDefault();startRepeat('down')" 
+                  ontouchend="event.preventDefault();stopRepeat()">↓</button>
+          <button class="mc-btn" ontouchstart="event.preventDefault();mobileAction('right')" 
+                  ontouchend="event.preventDefault();stopRepeat()">→</button>
         </div>
       </div>
     </div>
@@ -679,18 +926,60 @@ function showScreen(id) {
 }
 
 // =====================
+// RESPONSIVE CANVAS HANDLING
+// =====================
+function isMobile() {
+  return window.innerWidth <= 768;
+}
+
+function setupCanvasLayout() {
+  const canvas = document.getElementById('gameCanvas');
+  const desktopWrapper = document.querySelector('.desktop-game-layout .game-board-wrapper');
+  const mobileWrapper = document.getElementById('mobileBoardWrapper');
+  
+  if (isMobile()) {
+    // Move canvas to mobile wrapper
+    if (canvas.parentElement !== mobileWrapper) {
+      const overlay = document.getElementById('pauseOverlay');
+      mobileWrapper.appendChild(canvas);
+      mobileWrapper.appendChild(overlay);
+    }
+    // Calculate available size
+    const availWidth = window.innerWidth - 16 - (56 + 8) * 2 - 16; // padding + sides + gaps
+    const availHeight = window.innerHeight * 0.55;
+    const blockFromW = Math.floor(availWidth / COLS);
+    const blockFromH = Math.floor(availHeight / ROWS);
+    const block = Math.max(14, Math.min(blockFromW, blockFromH, 30));
+    
+    canvas.width = block * COLS;
+    canvas.height = block * ROWS;
+    canvas.style.width = canvas.width + 'px';
+    canvas.style.height = canvas.height + 'px';
+    BLOCK = block;
+  } else {
+    // Move canvas back to desktop wrapper
+    if (canvas.parentElement !== desktopWrapper) {
+      const overlay = document.getElementById('pauseOverlay');
+      desktopWrapper.insertBefore(canvas, desktopWrapper.firstChild);
+      desktopWrapper.appendChild(overlay);
+    }
+    BLOCK = 30;
+    canvas.width = BLOCK * COLS;
+    canvas.height = BLOCK * ROWS;
+    canvas.style.width = canvas.width + 'px';
+    canvas.style.height = canvas.height + 'px';
+  }
+}
+
+// =====================
 // TETRIS GAME
 // =====================
 const COLS = 10;
 const ROWS = 20;
-const BLOCK = 30;
+let BLOCK = 30;
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const nextCanvas = document.getElementById('nextCanvas');
-const nextCtx = nextCanvas.getContext('2d');
-const holdCanvas = document.getElementById('holdCanvas');
-const holdCtx = holdCanvas.getContext('2d');
 
 const PIECES = {
   I: { shape: [[1,1,1,1]], color: '#00ffff' },
@@ -882,16 +1171,17 @@ function holdPieceFn() {
   drawHold();
 }
 
-function drawBlock(c, x, y, color, size = BLOCK) {
+function drawBlock(c, x, y, color, size) {
+  size = size || BLOCK;
   c.fillStyle = color;
   c.shadowColor = color;
-  c.shadowBlur = 12;
+  c.shadowBlur = Math.max(4, size * 0.4);
   c.fillRect(x+1, y+1, size-2, size-2);
   c.shadowBlur = 0;
   // Inner highlight
   c.fillStyle = 'rgba(255,255,255,0.3)';
-  c.fillRect(x+2, y+2, size-4, 3);
-  c.fillRect(x+2, y+2, 3, size-4);
+  c.fillRect(x+2, y+2, size-4, Math.max(2, size*0.1));
+  c.fillRect(x+2, y+2, Math.max(2, size*0.1), size-4);
   // Border
   c.strokeStyle = 'rgba(255,255,255,0.5)';
   c.lineWidth = 1;
@@ -932,12 +1222,10 @@ function drawGhost() {
 }
 
 function draw() {
-  // Background
   ctx.fillStyle = '#050010';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   drawGrid();
 
-  // Board
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (board[r][c]) {
@@ -946,10 +1234,8 @@ function draw() {
     }
   }
 
-  // Ghost
   if (currentPiece) drawGhost();
 
-  // Current piece
   if (currentPiece) {
     for (let r = 0; r < currentPiece.shape.length; r++) {
       for (let c = 0; c < currentPiece.shape[r].length; c++) {
@@ -965,7 +1251,7 @@ function drawMini(canvasCtx, piece, cw, ch) {
   canvasCtx.fillStyle = '#050010';
   canvasCtx.fillRect(0, 0, cw, ch);
   if (!piece) return;
-  const size = 20;
+  const size = Math.floor(Math.min(cw, ch) / 5);
   const w = piece.shape[0].length * size;
   const h = piece.shape.length * size;
   const ox = (cw - w) / 2;
@@ -980,19 +1266,37 @@ function drawMini(canvasCtx, piece, cw, ch) {
 }
 
 function drawNext() {
-  drawMini(nextCtx, nextPiece, 100, 100);
+  // Both desktop and mobile next canvases
+  const desktopNext = document.getElementById('nextCanvasD');
+  const mobileNext = document.getElementById('nextCanvasM');
+  if (desktopNext) drawMini(desktopNext.getContext('2d'), nextPiece, desktopNext.width, desktopNext.height);
+  if (mobileNext) drawMini(mobileNext.getContext('2d'), nextPiece, mobileNext.width, mobileNext.height);
 }
+
 function drawHold() {
-  drawMini(holdCtx, holdPiece, 100, 100);
+  const desktopHold = document.getElementById('holdCanvasD');
+  const mobileHold = document.getElementById('holdCanvasM');
+  if (desktopHold) drawMini(desktopHold.getContext('2d'), holdPiece, desktopHold.width, desktopHold.height);
+  if (mobileHold) drawMini(mobileHold.getContext('2d'), holdPiece, mobileHold.width, mobileHold.height);
 }
 
 function updateUI() {
-  document.getElementById('scoreVal').textContent = score;
-  document.getElementById('levelVal').textContent = level;
-  document.getElementById('linesVal').textContent = lines;
+  ['scoreValD', 'scoreValM'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = score;
+  });
+  ['levelValD', 'levelValM'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = level;
+  });
+  ['linesValD', 'linesValM'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = lines;
+  });
 }
 
-function gameLoop(time = 0) {
+function gameLoop(time) {
+  time = time || 0;
   if (!gameRunning) return;
   if (paused) { lastTime = time; requestAnimationFrame(gameLoop); return; }
   const delta = time - lastTime;
@@ -1017,15 +1321,23 @@ function startGame(difficulty) {
   lastTime = 0;
   holdPiece = null;
   nextPiece = randomPiece();
-  spawnPiece();
-  drawHold();
-  gameRunning = true;
-  paused = false;
-  document.getElementById('pauseOverlay').classList.remove('show');
+  
   showScreen('game-screen');
   document.getElementById('game-screen').classList.add('active');
-  updateUI();
-  requestAnimationFrame(gameLoop);
+  
+  // Setup canvas after screen is visible
+  setTimeout(() => {
+    setupCanvasLayout();
+    spawnPiece();
+    drawHold();
+    drawNext();
+    gameRunning = true;
+    paused = false;
+    document.getElementById('pauseOverlay').classList.remove('show');
+    updateUI();
+    draw();
+    requestAnimationFrame(gameLoop);
+  }, 50);
 }
 
 function togglePause() {
@@ -1039,12 +1351,14 @@ function togglePause() {
 function quitGame() {
   gameRunning = false;
   paused = false;
+  stopRepeat();
   document.getElementById('pauseOverlay').classList.remove('show');
   showScreen('menu-screen');
 }
 
 function gameOver() {
   gameRunning = false;
+  stopRepeat();
   document.getElementById('finalScore').textContent = score;
   document.getElementById('finalLevel').textContent = level;
   document.getElementById('finalLines').textContent = lines;
@@ -1101,15 +1415,15 @@ function renderScores() {
   tbody.innerHTML = filtered.slice(0, 15).map((s, i) => {
     const rankClass = i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '';
     const medals = ['🥇', '🥈', '🥉'];
-    const rank = i < 3 ? medals[i] : `#${i+1}`;
-    return `<tr>
-      <td class="${rankClass}">${rank}</td>
-      <td class="${rankClass}">${s.name}</td>
-      <td class="${rankClass}">${s.score.toLocaleString()}</td>
-      <td>${s.level}</td>
-      <td>${s.lines}</td>
-      <td>${DIFFICULTY[s.difficulty]?.name || s.difficulty}</td>
-    </tr>`;
+    const rank = i < 3 ? medals[i] : '#'+(i+1);
+    return '<tr>' +
+      '<td class="'+rankClass+'">'+rank+'</td>' +
+      '<td class="'+rankClass+'">'+s.name+'</td>' +
+      '<td class="'+rankClass+'">'+s.score.toLocaleString()+'</td>' +
+      '<td>'+s.level+'</td>' +
+      '<td>'+s.lines+'</td>' +
+      '<td>'+(DIFFICULTY[s.difficulty] ? DIFFICULTY[s.difficulty].name : s.difficulty)+'</td>' +
+    '</tr>';
   }).join('');
 }
 
@@ -1149,6 +1463,10 @@ document.addEventListener('keydown', e => {
   }
 });
 
+// Mobile touch controls with auto-repeat for movement
+let repeatInterval = null;
+let repeatTimeout = null;
+
 function mobileAction(action) {
   if (!gameRunning || paused) return;
   switch(action) {
@@ -1159,10 +1477,108 @@ function mobileAction(action) {
     case 'drop': hardDrop(); break;
     case 'hold': holdPieceFn(); break;
   }
+  draw();
 }
 
-// Initial draw
+function startRepeat(action) {
+  mobileAction(action);
+  stopRepeat();
+  repeatTimeout = setTimeout(() => {
+    repeatInterval = setInterval(() => mobileAction(action), 60);
+  }, 200);
+}
+
+function stopRepeat() {
+  if (repeatTimeout) { clearTimeout(repeatTimeout); repeatTimeout = null; }
+  if (repeatInterval) { clearInterval(repeatInterval); repeatInterval = null; }
+}
+
+// Swipe gestures on game canvas
+let touchStartX = 0, touchStartY = 0, touchStartTime = 0;
+let lastMoveX = 0, lastMoveY = 0;
+
+canvas.addEventListener('touchstart', e => {
+  if (!gameRunning || paused) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  touchStartX = lastMoveX = t.clientX;
+  touchStartY = lastMoveY = t.clientY;
+  touchStartTime = Date.now();
+}, {passive: false});
+
+canvas.addEventListener('touchmove', e => {
+  if (!gameRunning || paused) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  const dx = t.clientX - lastMoveX;
+  const dy = t.clientY - lastMoveY;
+  const threshold = BLOCK * 0.9;
+  
+  if (Math.abs(dx) > threshold) {
+    move(dx > 0 ? 1 : -1);
+    lastMoveX = t.clientX;
+    draw();
+  }
+  if (dy > threshold) {
+    softDrop();
+    lastMoveY = t.clientY;
+    draw();
+  }
+}, {passive: false});
+
+canvas.addEventListener('touchend', e => {
+  if (!gameRunning || paused) return;
+  e.preventDefault();
+  const t = e.changedTouches[0];
+  const dx = t.clientX - touchStartX;
+  const dy = t.clientY - touchStartY;
+  const dt = Date.now() - touchStartTime;
+  
+  // Swipe down fast = hard drop
+  if (dy > 80 && dt < 250 && Math.abs(dx) < 50) {
+    hardDrop();
+    draw();
+  }
+  // Tap = rotate
+  else if (Math.abs(dx) < 15 && Math.abs(dy) < 15 && dt < 250) {
+    tryRotate(1);
+    draw();
+  }
+}, {passive: false});
+
+// Resize handling
+let resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if (gameRunning) {
+      setupCanvasLayout();
+      draw();
+    }
+  }, 200);
+});
+
+window.addEventListener('orientationchange', () => {
+  setTimeout(() => {
+    if (gameRunning) {
+      setupCanvasLayout();
+      draw();
+    }
+  }, 300);
+});
+
+// Prevent unwanted scrolling on mobile when playing
+document.addEventListener('touchmove', e => {
+  if (gameRunning && !paused) {
+    if (e.target.tagName === 'CANVAS' || e.target.classList.contains('mc-btn')) {
+      e.preventDefault();
+    }
+  }
+}, {passive: false});
+
+// Initial setup
 createBoard();
+setupCanvasLayout();
 draw();
 </script>
 
