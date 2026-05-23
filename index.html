@@ -404,6 +404,7 @@ h1 {
 .card:nth-child(10) { animation-delay: 0.5s; }
 .card:nth-child(11) { animation-delay: 0.55s; }
 .card:nth-child(12) { animation-delay: 0.6s; }
+.card:nth-child(13) { animation-delay: 0.65s; }
 
 @keyframes cardAppear {
     from {
@@ -483,6 +484,7 @@ h1 {
 .pink { color: #ec4899; }
 .cyan { color: #06b6d4; }
 .indigo { color: #6366f1; }
+.lime { color: #84cc16; }
 
 .green:hover { 
     box-shadow: 0 0 30px #4ade80, 0 0 60px rgba(74, 222, 128, 0.4), inset 0 0 20px rgba(74, 222, 128, 0.1);
@@ -510,6 +512,9 @@ h1 {
 }
 .indigo:hover { 
     box-shadow: 0 0 30px #6366f1, 0 0 60px rgba(99, 102, 241, 0.4), inset 0 0 20px rgba(99, 102, 241, 0.1);
+}
+.lime:hover { 
+    box-shadow: 0 0 30px #84cc16, 0 0 60px rgba(132, 204, 22, 0.4), inset 0 0 20px rgba(132, 204, 22, 0.1);
 }
 
 .card:hover {
@@ -1011,6 +1016,42 @@ h1 {
     100% { opacity: 0.5; }
 }
 
+/* 🐸 Frogger Neon */
+.frogger-preview::before {
+    content: "🐸";
+    position: absolute;
+    font-size: 40px;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    filter: drop-shadow(0 0 10px #84cc16);
+    animation: froggerHop 1.5s ease-in-out infinite;
+}
+
+.frogger-preview::after {
+    content: "";
+    position: absolute;
+    width: 60px;
+    height: 6px;
+    background: #84cc16;
+    border-radius: 3px;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 0 15px #84cc16, 0 0 25px #84cc16;
+    animation: carMove 2s linear infinite;
+}
+
+@keyframes froggerHop {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(-15px); }
+}
+
+@keyframes carMove {
+    0% { transform: translateX(30px); }
+    100% { transform: translateX(-90px); }
+}
+
 /* Nom du jeu */
 .name {
     font-weight: 700;
@@ -1351,6 +1392,15 @@ h1 {
         <div class="play-badge"><span>▶ PLAY</span></div>
     </a>
 
+    <!-- 🐸 Frogger Neon -->
+    <a href="frogger-neon.html" class="card lime" data-name="frogger neon hopper" data-category="classic">
+        <div class="category-badge">CLASSIC</div>
+        <div class="preview frogger-preview"></div>
+        <div class="name">🐸 FROGGER NEON</div>
+        <div class="stars">★ ☆ ☆ ☆ ☆</div>
+        <div class="play-badge"><span>▶ PLAY</span></div>
+    </a>
+
     <!-- Message aucun résultat -->
     <div class="no-results" id="noResults">
         <div class="icon">🔍</div>
@@ -1363,7 +1413,7 @@ h1 {
 <div class="stats-section">
     <div class="stat-box">
         <div class="stat-icon">🎮</div>
-        <div class="stat-value">12</div>
+        <div class="stat-value">13</div>
         <div class="stat-label">Jeux Disponibles</div>
     </div>
     <div class="stat-box">
